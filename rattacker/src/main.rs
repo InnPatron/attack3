@@ -18,7 +18,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("Attempting to read from the Attack3...");
 
+    let mut zeroed = false;
     let mut buffer = [0u8; 1024];
+    let mut zero = [0, 0];
     loop {
         let read_len = attack3.read(&mut buffer);
         if let Ok(read_len) = read_len {
@@ -27,8 +29,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             for i in 0..packet_count {
                 let start = i * PACKET_LENGTH;
                 let p = Packet::parse(&buffer[start..start + PACKET_LENGTH])?;
+
+                if !zeroed {
+                    zero[0] = p.x_axis;
+                    zero[1] = p.y_axis;
+                    zeroed = true;
+                }
                 // println!("{}", p);
-                let s = State::from_packet([0x80, 0x7f], p);
+                let s = State::from_packet(zero, p);
                 println!("{}", s);
             }
         }
