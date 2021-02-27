@@ -1,0 +1,13 @@
+[package]
+name = "rattacker"
+version = "0.1.0"
+authors = ["InnPatron <randomcivvy0121@gmail.com>"]
+edition = "2018"
+
+build = "build.rs"
+links = "usb-1.0"
+
+[dependencies]
+
+[build-dependencies]
+pkg-config = "0.3.19"
