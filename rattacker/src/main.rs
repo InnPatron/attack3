@@ -27,10 +27,68 @@ fn main() -> Result<(), Box<dyn Error>> {
             for i in 0..packet_count {
                 let start = i * PACKET_LENGTH;
                 let p = Packet::parse(&buffer[start..start + PACKET_LENGTH])?;
+                // println!("{}", p);
+                let s = State::from_packet([0x80, 0x7f], p);
+                println!("{}", s);
             }
         }
     }
     Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct State {
+    buttons: [bool; 11],
+    x_axis: f32,
+    y_axis: f32,
+    z_axis: f32,
+}
+
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (i, b) in self.buttons.iter().enumerate() {
+            write!(f, "button {}: {}\n", i + 1, b)?;
+        }
+
+        write!(f, "x-axis: {}\n", self.x_axis)?;
+        write!(f, "y-axis: {}\n", self.y_axis)?;
+        write!(f, "z-axis: {}\n", self.z_axis)?;
+
+
+        Ok(())
+    }
+}
+
+impl State {
+    /// Normalize axis values between [-1, 1]
+    /// x-axis:
+    ///   * +1 => right
+    ///   * -1 => left
+    /// y-axis:
+    ///   * +1 => forward
+    ///   * -1 => backward
+    /// z-axis:
+    ///   * +1 => up
+    ///   * -1 => down
+    fn from_packet(zero: [u8; 2], packet: Packet) -> Self {
+        let x_zero = zero[0];
+        let y_zero = zero[1];
+
+        let px = packet.x_axis as f32;
+        let py = packet.y_axis as f32;
+        let pz = packet.z_axis as f32;
+
+        let sx = 2.0 * (px - x_zero as f32) / 255.0;
+        let sy = 2.0 * (py - y_zero as f32) / 255.0;
+        let sz = -2.0 * (pz - 128.0) / 255.0;
+
+        State {
+            buttons: packet.buttons,
+            x_axis: sx,
+            y_axis: sy,
+            z_axis: sz,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
