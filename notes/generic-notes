@@ -1,0 +1,9 @@
+`lsusb`
+* Vendor ID:Product ID
+
+`sudo lsusb -vd VID:PID`
+* Dumps descriptors
+* Response descriptors may be unavailable
+* If HID device: driver `usbhid` is claiming it
+  * `sudo dmesg | grep usb` to find `X-Y.Z` for the device
+  * `sudo bash -c "echo -n X-Y.Z:1.0 >/sys/bus/usb/drivers/usbhid/unbind"`
