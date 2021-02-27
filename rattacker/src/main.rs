@@ -1,93 +1,117 @@
-use std::ptr;
+extern crate hidapi;
 
-use libusb_sys::{
-    libusb_device as Device,
-    libusb_device_descriptor as DeviceDescriptor,
-    self as libusb,
-};
+use std::error::Error;
+use std::fmt;
 
-use libc::{c_int};
+use hidapi::{HidApi};
 
-macro_rules! dflt_ctxt {
-    () => (ptr::null_mut())
+const PACKET_LENGTH: usize = 5;
+const VID: u16 = 0x046d;
+const PID: u16 = 0xc214;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Packet {
+    buttons: [bool; 11],
+    x_axis: u8,
+    y_axis: u8,
+    z_axis: u8,
 }
 
-fn main() {
-    let mut devices: *const *mut Device = ptr::null_mut();
-    unsafe {
-
-        // Initialize libusb default context
-        println!("Initializing libusb...");
-        let status: c_int = libusb::libusb_init(dflt_ctxt!());
-        if status != 0 {
-            eprintln!("Error initializing: {}", status);
-            return;
+impl fmt::Display for Packet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (i, b) in self.buttons.iter().enumerate() {
+            write!(f, "button {}: {}\n", i + 1, b)?;
         }
-        println!("Initialized libusb");
 
-        println!("Getting device list");
-        let len = libusb::libusb_get_device_list(dflt_ctxt!(), &mut devices as *mut _);
-        if len > 0 {
-            let result = print_devices(devices);
-            if result.is_err() {
-                eprintln!("Error printing device list");
-                libusb::libusb_exit(dflt_ctxt!());
-                return;
-            }
+        write!(f, "x-axis: {:#02X}\n", self.x_axis)?;
+        write!(f, "y-axis: {:#02X}\n", self.y_axis)?;
+        write!(f, "z-axis: {:#02X}\n", self.z_axis)?;
 
-        } else {
-            eprintln!("Error. Device list length: {}", len);
-            libusb::libusb_exit(dflt_ctxt!());
-            return;
-        }
-        libusb::libusb_exit(dflt_ctxt!());
+
+        Ok(())
     }
 }
 
-unsafe fn print_devices(devices: *const *mut Device) -> Result<(), c_int> {
-    let mut dev: *mut Device = *devices;
-    let mut i = 0;
+fn parse_packet(b: &[u8]) -> Result<Packet, String> {
+    assert!(b.len() == 5);
 
-    while dev != ptr::null_mut() {
-        let mut desc = DeviceDescriptor {
-            bLength: 0,
-            bDescriptorType: 0,
-            bcdUSB: 0,
-            bDeviceClass: 0,
-            bDeviceSubClass: 0,
-            bDeviceProtocol: 0,
-            bMaxPacketSize0: 0,
-            idVendor: 0,
-            idProduct: 0,
-            bcdDevice: 0,
-            iManufacturer: 0,
-            iProduct: 0,
-            iSerialNumber: 0,
-            bNumConfigurations: 0,
-        };
-        let status = libusb::libusb_get_device_descriptor(dev, &mut desc as *mut _);
-        if status != 0 {
-            eprintln!("Failed to get device descriptor");
-            return Err(status);
-        }
+    let mut packet = Packet {
+        buttons: [false; 11],
+        x_axis: 0,
+        y_axis: 0,
+        z_axis: 0,
+    };
 
-        let bus_number =  libusb::libusb_get_bus_number(dev);
-        let device_addr = libusb::libusb_get_device_address(dev);
+    packet.x_axis = b[0];
+    packet.y_axis = b[1];
+    packet.z_axis = b[2];
 
-        println!("{:#06x}:{:#06x} (bus {}, device {})",
-            desc.idVendor, desc.idProduct, bus_number, device_addr);
+    let bb1 = b[3];
+    let bb2 = b[4];
 
-        let mut path = [0u8; 8];
-        let status = libusb::libusb_get_port_numbers(dev, &mut path[0] as *mut _, path.len() as c_int);
-        if status > 0 {
-            println!("path: {}", path[0]);
-            for s in path.iter() {
-                print!(".{}", s);
+    //Button 1:
+    //`0x0100` => `0000_0001_0000_0000`
+    //Button 2:
+    //`0x0200` => `0000_0010_0000_0000`
+    //Button 3:
+    //`0x0400` => `0000_0100_0000_0000`
+    //Button 4:
+    //`0x0800` => `0000_1000_0000_0000`
+    //Button 5:
+    //`0x1000` => `0001_0000_0000_0000`
+    //Button 6:
+    //`0x2000` => `0010_0000_0000_0000`
+    //Button 7:
+    //`0x4000` => `0100_0000_0000_0000`
+    //Button 8:
+    //`0x8000` => `1000_0000_0000_0000`
+    //Button 9:
+    //`0x0001` => `0000_0000_0000_0001`
+    //Button 10:
+    //`0x0002` => `0000_0000_0000_0010`
+    //Button 11:
+    //`0x0004` => `0000_0000_0000_0100`
+
+    packet.buttons[0] = bb1 & 0b0000_0001 > 0;
+    packet.buttons[1] = bb1 & 0b0000_0010 > 0;
+    packet.buttons[2] = bb1 & 0b0000_0100 > 0;
+    packet.buttons[3] = bb1 & 0b0000_1000 > 0;
+
+    packet.buttons[4] = bb1 & 0b0001_0000 > 0;
+    packet.buttons[5] = bb1 & 0b0010_0000 > 0;
+    packet.buttons[6] = bb1 & 0b0100_0000 > 0;
+    packet.buttons[7] = bb1 & 0b1000_0000 > 0;
+
+    packet.buttons[8] = bb2 & 0b0000_0001 > 0;
+    packet.buttons[9] = bb2 & 0b0000_0010 > 0;
+    packet.buttons[10] = bb2 & 0b0000_0100 > 0;
+
+    Ok(packet)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let hidapi = HidApi::new()?;
+
+    println!("Attempting to open the Attack3...");
+    let attack3 = hidapi.open(VID, PID)?;
+    println!("Opened the Attack3");
+
+    println!("Attempting to read from the Attack3...");
+
+    let mut buffer = [0u8; 1024];
+    loop {
+        let read_len = attack3.read(&mut buffer);
+        if let Ok(read_len) = read_len {
+            let packet_count = read_len / PACKET_LENGTH;
+            // println!("Received {} packets", packet_count);
+            for i in 0..packet_count {
+                let start = i * PACKET_LENGTH;
+                let p = parse_packet(&buffer[start..start + PACKET_LENGTH])?;
+                println!("{:#?}", p);
             }
         }
-        print!("\n");
-        i = i + 1;
-        dev = *devices.offset(i);
     }
+
+
     Ok(())
 }

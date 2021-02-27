@@ -7,7 +7,7 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-libusb-sys = "0.2.3"
+hidapi = "1.2.5"
 libc = "0.2.86"
 
 [build-dependencies]
