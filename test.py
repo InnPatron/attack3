@@ -35,7 +35,7 @@ assert ep is not None
 while True:
     try:
         try:
-            if keyboard.is_pressed('q'):
+            if keyboard.is_pressed('ctrl+shift+alt+p'):
                 print("\nExiting...\n")
                 break
             ret = dev.read(ep, 100, 100)
