@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9dfd45b60c6f84a8f1f21830c95a36f516f13309ce24e4671cd4a2b44d1a753f"
+            "sha256": "21f9be50109f36f2df6e893563b77a1637d372acf5e809056dd5f02d9ba852a4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,13 @@
         ]
     },
     "default": {
+        "evdev": {
+            "hashes": [
+                "sha256:8782740eb1a86b187334c07feb5127d3faa0b236e113206dfe3ae8f77fb1aaf1"
+            ],
+            "index": "pypi",
+            "version": "==1.4.0"
+        },
         "keyboard": {
             "hashes": [
                 "sha256:63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b",
