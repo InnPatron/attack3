@@ -1,5 +1,8 @@
+# NOTE: needs to be run with `sudo` in order to use the keyboard module
+
 import usb.core
 import usb.util
+import keyboard
 
 VID = 0x046d
 PID = 0xc214
@@ -31,11 +34,15 @@ assert ep is not None
 
 while True:
     try:
-        ret = dev.read(ep, 100, 100)
-        sret = ''.join(format(x, '02x') for x in ret)
-        print(sret + '\t' + str(len(sret)))
-        if (input("cmd: ") == "q"):
-            break
+        try:
+            if keyboard.is_pressed('q'):
+                print("\nExiting...\n")
+                break
+            ret = dev.read(ep, 100, 100)
+            sret = ''.join(format(x, '02x') for x in ret)
+            print(sret + '\nlen: ' + str(len(sret)))
+        except:
+            continue
     except:
         continue
 
