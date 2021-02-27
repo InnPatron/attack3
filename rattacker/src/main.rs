@@ -87,7 +87,7 @@ impl State {
         let pz = packet.z_axis as f32;
 
         let sx = 2.0 * (px - x_zero as f32) / 255.0;
-        let sy = 2.0 * (py - y_zero as f32) / 255.0;
+        let sy = -2.0 * (py - y_zero as f32) / 255.0;
         let sz = -2.0 * (pz - 128.0) / 255.0;
 
         State {
