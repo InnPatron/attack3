@@ -23,33 +23,33 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cfg = Config {
         buttons: [
             // b1
-            Key::A,
-            // b2
-            Key::B,
-            // b3
             Key::K1,
+            // b2
+            Key::K2,
+            // b3
+            Key::K3,
             // b4
-            Key::A,
+            Key::K4,
             // b5
-            Key::A,
+            Key::K5,
             // b6
-            Key::A,
+            Key::K6,
             // b7
-            Key::A,
+            Key::Escape,
             // b8
-            Key::A,
+            Key::V,
             // b9
-            Key::A,
+            Key::F9,
             // b10
-            Key::A,
+            Key::F5,
             // b11
-            Key::Shift,
+            Key::Ctrl,
         ],
-        x_axis_positive: Key::RightArrow,
-        x_axis_negative: Key::LeftArrow,
+        x_axis_positive: Key::F8,
+        x_axis_negative: Key::F7,
 
-        y_axis_positive: Key::UpArrow,
-        y_axis_negative: Key::DownArrow,
+        y_axis_positive: Key::W,
+        y_axis_negative: Key::S,
 
         x_dead_zone: 0.5,
         y_dead_zone: 0.5,
