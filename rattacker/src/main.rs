@@ -8,8 +8,42 @@ use hidapi::{HidApi};
 const PACKET_LENGTH: usize = 5;
 const VID: u16 = 0x046d;
 const PID: u16 = 0xc214;
+const BUTTON_LEN: usize = 11;
+
+macro_rules! printHandler {
+    ($msg: expr) => (Box::new(|| { println!("{}", $msg); }))
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let mut manager = Manager {
+        previous_state: None,
+        button_up: [
+            printHandler!("up button1"),
+            printHandler!("up button2"),
+            printHandler!("up button3"),
+            printHandler!("up button4"),
+            printHandler!("up button5"),
+            printHandler!("up button6"),
+            printHandler!("up button7"),
+            printHandler!("up button8"),
+            printHandler!("up button9"),
+            printHandler!("up button10"),
+            printHandler!("up button11"),
+        ],
+        button_down: [
+            printHandler!("down button1"),
+            printHandler!("down button2"),
+            printHandler!("down button3"),
+            printHandler!("down button4"),
+            printHandler!("down button5"),
+            printHandler!("down button6"),
+            printHandler!("down button7"),
+            printHandler!("down button8"),
+            printHandler!("down button9"),
+            printHandler!("down button10"),
+            printHandler!("down button11"),
+        ],
+    };
     let hidapi = HidApi::new()?;
 
     println!("Attempting to open the Attack3...");
@@ -37,12 +71,49 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 // println!("{}", p);
                 let s = State::from_packet(zero, p);
-                println!("{}", s);
+                // println!("{}", s);
+                manager.step(s);
             }
         }
     }
     Ok(())
 }
+
+struct Manager {
+    previous_state: Option<State>,
+    button_up: [Box<dyn Fn() -> ()>; BUTTON_LEN],
+    button_down: [Box<dyn Fn() -> ()>; BUTTON_LEN],
+}
+
+impl Manager {
+
+    fn step(&mut self, next_state: State) {
+        match self.previous_state.take() {
+            Some(previous_state) => {
+                for i in 0..BUTTON_LEN {
+                    let pb = previous_state.buttons[i];
+                    let nb = next_state.buttons[i];
+
+                    // println!("{}: {} -> {}", i + 1, pb, nb);
+
+                    if !pb && nb {
+                        self.button_down[i]();
+                    } else if pb && !nb {
+                        self.button_up[i]();
+                    }
+                }
+
+                self.previous_state = Some(next_state);
+            }
+
+            None => {
+                self.previous_state = Some(next_state);
+
+            }
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 struct State {
