@@ -138,13 +138,13 @@ impl Manager {
         for k in cfg.buttons.iter().cloned() {
             let d1 = dispatcher.clone();
             let c1 = move || {
-                println!("Key up: {:?}", k);
+                // println!("Key up: {:?}", k);
                 d1.key_up(k);
             };
 
             let d2 = dispatcher.clone();
             let c2 = move || {
-                println!("Key down: {:?}", k);
+                // println!("Key down: {:?}", k);
                 d2.key_down(k);
             };
 
