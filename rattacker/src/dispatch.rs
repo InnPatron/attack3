@@ -9,6 +9,18 @@ macro_rules! printHandler {
     (joy => $msg: expr) => (Box::new(|_| { println!("{}", $msg); }))
 }
 
+macro_rules! handler {
+    (UP => $d: expr, $k: expr) => {{
+        let tmp = $d.clone();
+        Box::new((move || tmp.key_up($k))) as Box<dyn Fn() -> ()>
+    }};
+
+    (DOWN => $d: expr, $k: expr) => {{
+        let tmp = $d.clone();
+        Box::new((move || tmp.key_down($k))) as Box<dyn Fn() -> ()>
+    }};
+}
+
 pub trait Dispatcher {
     fn from_cfg(cfg: &Config) -> Self;
     fn key_up(&self, k: Key);
@@ -138,23 +150,43 @@ impl Manager {
             button_up.push(Box::new(c1) as Box<dyn Fn() -> ()>);
             button_down.push(Box::new(c2) as Box<dyn Fn() -> ()>);
         }
+        let x_enter_dead_zone_negative =
+            handler!(UP => dispatcher, cfg.x_axis_negative);
+        let x_exit_dead_zone_negative =
+            handler!(DOWN => dispatcher, cfg.x_axis_negative);
+
+        let y_enter_dead_zone_negative =
+            handler!(UP => dispatcher, cfg.y_axis_negative);
+        let y_exit_dead_zone_negative =
+            handler!(DOWN => dispatcher, cfg.y_axis_negative);
+
+        let x_enter_dead_zone_positive =
+            handler!(UP => dispatcher, cfg.x_axis_positive);
+        let x_exit_dead_zone_positive =
+            handler!(DOWN => dispatcher, cfg.x_axis_positive);
+
+        let y_enter_dead_zone_positive =
+            handler!(UP => dispatcher, cfg.y_axis_positive);
+        let y_exit_dead_zone_positive =
+            handler!(DOWN => dispatcher, cfg.y_axis_positive);
+
         Manager {
             previous_state: None,
 
             button_up,
             button_down,
 
-            x_enter_dead_zone_negative: printHandler!("x-axis enter deadzone -"),
-            y_enter_dead_zone_negative: printHandler!("y-axis enter deadzone -"),
+            x_enter_dead_zone_negative,
+            y_enter_dead_zone_negative,
 
-            x_enter_dead_zone_positive: printHandler!("x-axis enter deadzone +"),
-            y_enter_dead_zone_positive: printHandler!("y-axis enter deadzone +"),
+            x_enter_dead_zone_positive,
+            y_enter_dead_zone_positive,
 
-            x_exit_dead_zone_negative: printHandler!("x-axis exit deadzone -"),
-            y_exit_dead_zone_negative: printHandler!("y-axis exit deadzone -"),
+            x_exit_dead_zone_negative,
+            y_exit_dead_zone_negative,
 
-            x_exit_dead_zone_positive: printHandler!("x-axis exit deadzone +"),
-            y_exit_dead_zone_positive: printHandler!("y-axis exit deadzone +"),
+            x_exit_dead_zone_positive,
+            y_exit_dead_zone_positive,
 
 
             x_dead_zone: cfg.x_dead_zone,
