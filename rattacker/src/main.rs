@@ -41,9 +41,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             // b9
             Key::F5,
             // b10
-            Key::Escape,
-            // b11
             Key::F3,
+            // b11
+            Key::Escape,
         ],
         x_axis_positive: Key::F8,
         x_axis_negative: Key::F7,
