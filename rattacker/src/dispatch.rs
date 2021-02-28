@@ -75,6 +75,7 @@ pub enum Key {
     Shift,
     Ctrl,
     Enter,
+    Escape,
 
     LeftArrow,
     RightArrow,
