@@ -11,7 +11,8 @@ const PID: u16 = 0xc214;
 const BUTTON_LEN: usize = 11;
 
 macro_rules! printHandler {
-    ($msg: expr) => (Box::new(|| { println!("{}", $msg); }))
+    ($msg: expr) => (Box::new(|| { println!("{}", $msg); }));
+    (joy => $msg: expr) => (Box::new(|_| { println!("{}", $msg); }))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -43,6 +44,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             printHandler!("down button10"),
             printHandler!("down button11"),
         ],
+        x_enter_dead_zone: printHandler!("x-axis enter deadzone"),
+        y_enter_dead_zone: printHandler!("y-axis enter deadzone"),
+
+        x_exit_dead_zone: printHandler!("x-axis exit deadzone"),
+        y_exit_dead_zone: printHandler!("y-axis exit deadzone"),
+
+        x_dead_zone: 0.5,
+        y_dead_zone: 0.5,
     };
     let hidapi = HidApi::new()?;
 
@@ -83,16 +92,23 @@ struct Manager {
     previous_state: Option<State>,
     button_up: [Box<dyn Fn() -> ()>; BUTTON_LEN],
     button_down: [Box<dyn Fn() -> ()>; BUTTON_LEN],
+
+    x_enter_dead_zone: Box<dyn Fn() -> ()>,
+    y_enter_dead_zone: Box<dyn Fn() -> ()>,
+    x_exit_dead_zone: Box<dyn Fn() -> ()>,
+    y_exit_dead_zone: Box<dyn Fn() -> ()>,
+    x_dead_zone: f32,
+    y_dead_zone: f32,
 }
 
 impl Manager {
 
-    fn step(&mut self, next_state: State) {
+    fn step(&mut self, ns: State) {
         match self.previous_state.take() {
-            Some(previous_state) => {
+            Some(ps) => {
                 for i in 0..BUTTON_LEN {
-                    let pb = previous_state.buttons[i];
-                    let nb = next_state.buttons[i];
+                    let pb = ps.buttons[i];
+                    let nb = ns.buttons[i];
 
                     // println!("{}: {} -> {}", i + 1, pb, nb);
 
@@ -103,11 +119,32 @@ impl Manager {
                     }
                 }
 
-                self.previous_state = Some(next_state);
+                // TODO: z-axis support
+                let ps_x = ps.x_axis.abs();
+                let ps_y = ps.y_axis.abs();
+                // let ps_z = ps.z_axis.abs();
+
+                let ns_x = ns.x_axis.abs();
+                let ns_y = ns.y_axis.abs();
+                // let ns_z = ns.z_axis.abs();
+
+                if ps_x > self.x_dead_zone && ns_x <= self.x_dead_zone {
+                    (self.x_enter_dead_zone)();
+                } else if ps_x <= self.x_dead_zone && ns_x > self.x_dead_zone {
+                    (self.x_exit_dead_zone)();
+                }
+
+                if ps_y > self.y_dead_zone && ns_y <= self.y_dead_zone {
+                    (self.y_enter_dead_zone)();
+                } else if ps_y <= self.y_dead_zone && ns_y > self.y_dead_zone {
+                    (self.y_exit_dead_zone)();
+                }
+
+                self.previous_state = Some(ns);
             }
 
             None => {
-                self.previous_state = Some(next_state);
+                self.previous_state = Some(ns);
 
             }
         }
