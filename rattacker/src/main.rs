@@ -33,17 +33,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             // b5
             Key::K5,
             // b6
-            Key::K6,
+            Key::Ctrl,
             // b7
-            Key::Escape,
+            Key::Alt,
             // b8
             Key::V,
             // b9
-            Key::F9,
-            // b10
             Key::F5,
+            // b10
+            Key::Escape,
             // b11
-            Key::Ctrl,
+            Key::F3,
         ],
         x_axis_positive: Key::F8,
         x_axis_negative: Key::F7,
@@ -51,8 +51,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         y_axis_positive: Key::W,
         y_axis_negative: Key::S,
 
-        x_dead_zone: 0.5,
-        y_dead_zone: 0.5,
+        x_dead_zone: 0.35,
+        y_dead_zone: 0.4,
     };
 
     let mut manager = Manager::new(cfg);
