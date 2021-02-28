@@ -30,7 +30,15 @@ impl Dispatcher for WinDispatch {
             key_up: HashMap::new(),
         };
 
-        for k in cfg.buttons.iter() {
+        let joy_keys = [
+            cfg.x_axis_positive,
+            cfg.x_axis_negative,
+            cfg.y_axis_positive,
+            cfg.y_axis_negative,
+        ];
+        // dbg!(joy_keys);
+
+        for k in cfg.buttons.iter().chain(joy_keys.iter()) {
             if disp.key_down.contains_key(k) {
                 continue;
             }
