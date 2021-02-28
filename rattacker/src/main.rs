@@ -21,12 +21,35 @@ const PID: u16 = 0xc214;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = Config {
-        buttons: [Key::A; 11],
-        x_axis_positive: Key::A,
-        x_axis_negative: Key::A,
+        buttons: [
+            // b1
+            Key::A,
+            // b2
+            Key::B,
+            // b3
+            Key::K1,
+            // b4
+            Key::A,
+            // b5
+            Key::A,
+            // b6
+            Key::A,
+            // b7
+            Key::A,
+            // b8
+            Key::A,
+            // b9
+            Key::A,
+            // b10
+            Key::A,
+            // b11
+            Key::Shift,
+        ],
+        x_axis_positive: Key::RightArrow,
+        x_axis_negative: Key::LeftArrow,
 
-        y_axis_positive: Key::A,
-        y_axis_negative: Key::A,
+        y_axis_positive: Key::UpArrow,
+        y_axis_negative: Key::DownArrow,
 
         x_dead_zone: 0.5,
         y_dead_zone: 0.5,
