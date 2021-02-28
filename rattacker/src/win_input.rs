@@ -115,9 +115,9 @@ fn to_virtual_key(k: Key) -> u16 {
         Key::K9 => 0x0A,
 
         Key::Enter => 0x1C,
-        Key::Shift => 0x2A,
+        Key::Shift => 0x36,
         Key::Ctrl => 0x1d,
-        Key::Alt => 0x12,
+        Key::Alt => 0x38,
 
         Key::LeftArrow => 0xCB,
         Key::UpArrow => 0xC8,
