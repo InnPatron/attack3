@@ -1,4 +1,6 @@
 extern crate hidapi;
+#[cfg(target_os = "windows")]
+extern crate bindings;
 
 use std::error::Error;
 use std::fmt;
@@ -7,7 +9,8 @@ use hidapi::{HidApi};
 
 #[macro_use]
 mod dispatch;
-#[cfg(os = "windows")]
+
+#[cfg(target_os = "windows")]
 mod win_input;
 
 use dispatch::*;
@@ -17,7 +20,20 @@ const VID: u16 = 0x046d;
 const PID: u16 = 0xc214;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut manager = Manager::dbg();
+    let cfg = Config {
+        buttons: [Key::A; 11],
+        x_axis_positive: Key::A,
+        x_axis_negative: Key::A,
+
+        y_axis_positive: Key::A,
+        y_axis_negative: Key::A,
+
+        x_dead_zone: 0.5,
+        y_dead_zone: 0.5,
+    };
+
+    let mut manager = Manager::new(cfg);
+    // let mut manager = Manager::dbg();
     let hidapi = HidApi::new()?;
 
     println!("Attempting to open the Attack3...");

@@ -1,7 +1,5 @@
 use std::fmt;
 
-#[cfg(os = "windows")]
-use super::win_input as winput;
 use super::Packet;
 
 pub const BUTTON_LEN: usize = 11;
@@ -9,6 +7,12 @@ pub const BUTTON_LEN: usize = 11;
 macro_rules! printHandler {
     ($msg: expr) => (Box::new(|| { println!("{}", $msg); }));
     (joy => $msg: expr) => (Box::new(|_| { println!("{}", $msg); }))
+}
+
+pub trait Dispatcher {
+    fn from_cfg(cfg: &Config) -> Self;
+    fn key_up(&self, k: Key);
+    fn key_down(&self, k: Key);
 }
 
 // TODO: z-axis
@@ -26,7 +30,7 @@ pub struct Config {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Key {
     A,
     B,
@@ -74,8 +78,8 @@ pub enum Key {
 
 pub struct Manager {
     previous_state: Option<State>,
-    button_up: [Box<dyn Fn() -> ()>; BUTTON_LEN],
-    button_down: [Box<dyn Fn() -> ()>; BUTTON_LEN],
+    button_up: Vec<Box<dyn Fn() -> ()>>,
+    button_down: Vec<Box<dyn Fn() -> ()>>,
 
     x_enter_dead_zone_negative: Box<dyn Fn() -> ()>,
     y_enter_dead_zone_negative: Box<dyn Fn() -> ()>,
@@ -93,16 +97,61 @@ pub struct Manager {
 
 impl Manager {
 
-    #[cfg(os = "windows")]
-    fn new(cfg: Config) -> Self {
-        winput::foo();
-        todo!();
+    #[cfg(target_os = "windows")]
+    pub fn new(cfg: Config) -> Self {
+        #[cfg(target_os = "windows")]
+        use super::win_input as winput;
+        use std::rc::Rc;
+
+        let dispatcher = Rc::new(winput::WinDispatch::from_cfg(&cfg));
+
+        let mut button_up = Vec::new();
+        let mut button_down = Vec::new();
+        for k in cfg.buttons.iter().cloned() {
+            let d1 = dispatcher.clone();
+            let c1 = move || {
+                println!("Key up: {:?}", k);
+                d1.key_up(k);
+            };
+
+            let d2 = dispatcher.clone();
+            let c2 = move || {
+                println!("Key down: {:?}", k);
+                d2.key_down(k);
+            };
+
+            button_up.push(Box::new(c1) as Box<dyn Fn() -> ()>);
+            button_down.push(Box::new(c2) as Box<dyn Fn() -> ()>);
+        }
+        Manager {
+            previous_state: None,
+
+            button_up,
+            button_down,
+
+            x_enter_dead_zone_negative: printHandler!("x-axis enter deadzone -"),
+            y_enter_dead_zone_negative: printHandler!("y-axis enter deadzone -"),
+
+            x_enter_dead_zone_positive: printHandler!("x-axis enter deadzone +"),
+            y_enter_dead_zone_positive: printHandler!("y-axis enter deadzone +"),
+
+            x_exit_dead_zone_negative: printHandler!("x-axis exit deadzone -"),
+            y_exit_dead_zone_negative: printHandler!("y-axis exit deadzone -"),
+
+            x_exit_dead_zone_positive: printHandler!("x-axis exit deadzone +"),
+            y_exit_dead_zone_positive: printHandler!("y-axis exit deadzone +"),
+
+
+            x_dead_zone: cfg.x_dead_zone,
+            y_dead_zone: cfg.y_dead_zone,
+        }
     }
 
+    #[allow(dead_code)]
     pub fn dbg() -> Self {
         Manager {
             previous_state: None,
-            button_up: [
+            button_up: vec![
                 printHandler!("up button1"),
                 printHandler!("up button2"),
                 printHandler!("up button3"),
@@ -115,7 +164,7 @@ impl Manager {
                 printHandler!("up button10"),
                 printHandler!("up button11"),
             ],
-            button_down: [
+            button_down: vec![
                 printHandler!("down button1"),
                 printHandler!("down button2"),
                 printHandler!("down button3"),
