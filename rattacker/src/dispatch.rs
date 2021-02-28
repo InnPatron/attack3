@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[cfg(os = "windows")]
-use super::win_input;
+use super::win_input as winput;
 use super::Packet;
 
 pub const BUTTON_LEN: usize = 11;
@@ -12,14 +12,17 @@ macro_rules! printHandler {
 }
 
 // TODO: z-axis
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Config {
-    buttons: [Key; BUTTON_LEN],
-    x_axis_positive: Key,
-    x_axis_negative: Key,
+    pub buttons: [Key; BUTTON_LEN],
+    pub x_axis_positive: Key,
+    pub x_axis_negative: Key,
 
-    y_axis_positive: Key,
-    y_axis_negative: Key,
+    pub y_axis_positive: Key,
+    pub y_axis_negative: Key,
+
+    pub x_dead_zone: f32,
+    pub y_dead_zone: f32,
 }
 
 #[allow(dead_code)]
@@ -89,6 +92,12 @@ pub struct Manager {
 }
 
 impl Manager {
+
+    #[cfg(os = "windows")]
+    fn new(cfg: Config) -> Self {
+        winput::foo();
+        todo!();
+    }
 
     pub fn dbg() -> Self {
         Manager {
