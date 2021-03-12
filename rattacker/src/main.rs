@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         mode: Mode::Normal,
         buttons: [
             // b1
-            Key::A,
+            Key::LMB,
             // b2
             Key::K2,
             // b3
@@ -66,12 +66,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         //}
         joystick: JoystickConfig::Mouse {
             x_axis: AxisMouseConfig {
-                mouse_mode: MouseMode::Constant(1),
-                deadzone: 0.35,
+                mouse_mode: MouseMode::Constant(2),
+                deadzone: 0.25,
             },
             y_axis: AxisMouseConfig {
-                mouse_mode: MouseMode::Constant(-1),
-                deadzone: 0.40,
+                mouse_mode: MouseMode::Constant(-2),
+                deadzone: 0.20,
             }
         }
     };

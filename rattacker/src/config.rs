@@ -119,4 +119,6 @@ pub enum Key {
     K7,
     K8,
     K9,
+
+    LMB,
 }

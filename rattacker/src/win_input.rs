@@ -38,9 +38,9 @@ impl WinDispatch {
 
             Mode::Normal => {
                 self.key_down.insert(k.clone(),
-                Input::new_ascii_key(k.clone(), false));
+                Input::new_normal_key(k.clone(), false));
                 self.key_up.insert(k.clone(),
-                Input::new_ascii_key(k.clone(), true));
+                Input::new_normal_key(k.clone(), true));
 
             }
         }
@@ -92,6 +92,32 @@ impl Dispatcher for WinDispatch {
     }
 
     fn key_up(&self, k: Key) {
+
+        if let Key::LMB = k {
+            unsafe {
+                let input = Input {
+                    tag: TAG_MOUSE,
+                    union: InputUnion {
+                        mi: mem::ManuallyDrop::new(MOUSEINPUT {
+                            dx: 0,
+                            dy: 0,
+                            mouse_data: 0x0,
+                            dw_flags: MOUSEEVENTF_LEFTUP,
+                            time: 0,
+                            dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
+                        })
+                    }
+                };
+
+                // TODO: check if we need to extend the lifetime of input
+                let input = &input as *const _ as *mut Input;
+                SendInput(1, mem::transmute(input),
+                mem::size_of::<Input>() as i32);
+            }
+
+            return;
+        }
+
         let input = self.key_up.get(&k).unwrap() as *const _ as *mut Input;
 
         // Will never modify self.key_up after from_cfg()
@@ -103,6 +129,32 @@ impl Dispatcher for WinDispatch {
     }
 
     fn key_down(&self, k: Key) {
+        if let Key::LMB = k {
+            unsafe {
+                let input = Input {
+                    tag: TAG_MOUSE,
+                    union: InputUnion {
+                        mi: mem::ManuallyDrop::new(MOUSEINPUT {
+                            dx: 0,
+                            dy: 0,
+                            mouse_data: 0x0,
+                            dw_flags: MOUSEEVENTF_LEFTDOWN,
+                            time: 0,
+                            dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
+                        })
+                    }
+                };
+
+                // TODO: check if we need to extend the lifetime of input
+                let input = &input as *const _ as *mut Input;
+                SendInput(1, mem::transmute(input),
+                    mem::size_of::<Input>() as i32);
+            }
+
+            return;
+        }
+
+
         let input = self.key_down.get(&k).unwrap() as *const _;
 
         // Will never modify self.key_up after from_cfg()
@@ -144,7 +196,7 @@ impl Dispatcher for WinDispatch {
     }
 }
 
-fn ascii_virtual_key(k: Key) -> u16 {
+fn normal_virtual_key(k: Key) -> u16 {
     match k {
         Key::A => 0x41,
         Key::B => 0x42,
@@ -204,6 +256,8 @@ fn ascii_virtual_key(k: Key) -> u16 {
         Key::F7 => 0x76,
         Key::F8 => 0x77,
         Key::F9 => 0x78,
+
+        Key::LMB => 0x01,
 
         #[allow(unreachable_patterns)]
         k => todo!("Windows virtual key: {:?}", k),
@@ -278,6 +332,10 @@ fn directx_virtual_key(k: Key) -> u16 {
 }
 
 const MOUSEEVENTF_MOVE: u32 = 0x0001;
+const MOUSEEVENTF_LEFTDOWN: u32 = 0x0002;
+const MOUSEEVENTF_LEFTUP: u32 = 0x0004;
+
+
 const TAG_MOUSE: u32 = 0;
 const TAG_KEY: u32 = 1;
 const KEY_UP: u32 = 0x0002;
@@ -313,12 +371,12 @@ impl Input {
         }
     }
 
-    fn new_ascii_key(k: Key, up: bool) -> Self {
+    fn new_normal_key(k: Key, up: bool) -> Self {
         Input {
             tag: TAG_KEY,
             union: InputUnion {
                 ki: mem::ManuallyDrop::new(KEYBDINPUT {
-                    w_vk: ascii_virtual_key(k),
+                    w_vk: normal_virtual_key(k),
                     w_scan: 0,
                     dw_flags: if up { KEY_UP } else { 0x0 },
                     time: 0,
