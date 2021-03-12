@@ -37,9 +37,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             // b7
             Key::Alt,
             // b8
-            Key::V,
-            // b9
             Key::F5,
+            // b9
+            Key::V,
             // b10
             Key::F3,
             // b11
