@@ -212,7 +212,20 @@ impl Manager {
                 }
             }),
 
-            MouseMode::Linear { .. } => todo!("MouseMode::Linear dispatch handler"),
+            MouseMode::Linear { min, max, m } => Box::new(move |f| {
+                if f.abs() < config.deadzone {
+                    return;
+                }
+                let m = m as f32;
+
+                let r = f * m;
+                let r = (r as i32).clamp(min, max);
+                match axis {
+                    Axis::X => dispatcher.rel_mouse_x(r),
+                    Axis::Y => dispatcher.rel_mouse_y(r),
+                    Axis::Z => panic!("Cannot have mouse Z axis movement"),
+                }
+            }),
         }
     }
 

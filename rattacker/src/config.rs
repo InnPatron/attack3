@@ -54,8 +54,7 @@ pub enum MouseMode {
     Linear {
         min: i32,
         max: i32,
-        m: i32,
-        b: i32,
+        m: f32,
     },
 }
 
