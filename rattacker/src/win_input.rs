@@ -2,7 +2,7 @@ use std::mem;
 use std::collections::HashMap;
 
 use super::dispatch::Dispatcher;
-use super::config::{ Config, Key, Mode, Axis};
+use super::config::{ Config, Key, Mode};
 
 use bindings::windows::win32::keyboard_and_mouse_input::{
     SendInput,
@@ -28,6 +28,15 @@ impl WinDispatch {
             return;
         }
 
+        // TODO: check if mouse button handling needs to be different across modes
+        if k.is_mouse() {
+            self.key_down.insert(k.clone(),
+                Input::new_mouse_key(k.clone(), false));
+            self.key_up.insert(k.clone(),
+                Input::new_mouse_key(k.clone(), true));
+            return;
+        }
+
         match mode {
             Mode::DirectX => {
                 self.key_down.insert(k.clone(),
@@ -41,7 +50,6 @@ impl WinDispatch {
                 Input::new_normal_key(k.clone(), false));
                 self.key_up.insert(k.clone(),
                 Input::new_normal_key(k.clone(), true));
-
             }
         }
     }
@@ -82,8 +90,7 @@ impl Dispatcher for WinDispatch {
             }
 
             JoystickConfig::Mouse {
-                x_axis,
-                y_axis,
+                ..
             } => {
                 // Do no pre-caching for now
                 disp
@@ -92,32 +99,6 @@ impl Dispatcher for WinDispatch {
     }
 
     fn key_up(&self, k: Key) {
-
-        if let Key::LMB = k {
-            unsafe {
-                let input = Input {
-                    tag: TAG_MOUSE,
-                    union: InputUnion {
-                        mi: mem::ManuallyDrop::new(MOUSEINPUT {
-                            dx: 0,
-                            dy: 0,
-                            mouse_data: 0x0,
-                            dw_flags: MOUSEEVENTF_LEFTUP,
-                            time: 0,
-                            dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
-                        })
-                    }
-                };
-
-                // TODO: check if we need to extend the lifetime of input
-                let input = &input as *const _ as *mut Input;
-                SendInput(1, mem::transmute(input),
-                mem::size_of::<Input>() as i32);
-            }
-
-            return;
-        }
-
         let input = self.key_up.get(&k).unwrap() as *const _ as *mut Input;
 
         // Will never modify self.key_up after from_cfg()
@@ -129,32 +110,6 @@ impl Dispatcher for WinDispatch {
     }
 
     fn key_down(&self, k: Key) {
-        if let Key::LMB = k {
-            unsafe {
-                let input = Input {
-                    tag: TAG_MOUSE,
-                    union: InputUnion {
-                        mi: mem::ManuallyDrop::new(MOUSEINPUT {
-                            dx: 0,
-                            dy: 0,
-                            mouse_data: 0x0,
-                            dw_flags: MOUSEEVENTF_LEFTDOWN,
-                            time: 0,
-                            dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
-                        })
-                    }
-                };
-
-                // TODO: check if we need to extend the lifetime of input
-                let input = &input as *const _ as *mut Input;
-                SendInput(1, mem::transmute(input),
-                    mem::size_of::<Input>() as i32);
-            }
-
-            return;
-        }
-
-
         let input = self.key_down.get(&k).unwrap() as *const _;
 
         // Will never modify self.key_up after from_cfg()
@@ -334,7 +289,8 @@ fn directx_virtual_key(k: Key) -> u16 {
 const MOUSEEVENTF_MOVE: u32 = 0x0001;
 const MOUSEEVENTF_LEFTDOWN: u32 = 0x0002;
 const MOUSEEVENTF_LEFTUP: u32 = 0x0004;
-
+const MOUSEEVENTF_RIGHTDOWN: u32 = 0x0008;
+const MOUSEEVENTF_RIGHTUP: u32 = 0x0010;
 
 const TAG_MOUSE: u32 = 0;
 const TAG_KEY: u32 = 1;

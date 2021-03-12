@@ -4,7 +4,6 @@ extern crate bindings;
 
 use std::{thread, time};
 use std::error::Error;
-use std::fmt;
 
 use hidapi::{HidApi};
 
@@ -34,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             // b2
             Key::K2,
             // b3
-            Key::K3,
+            Key::RMB,
             // b4
             Key::K4,
             // b5
@@ -93,7 +92,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut s: Option<State> = None;
     loop {
         // TODO: make polling rate configurable
-        std::thread::sleep(time::Duration::from_millis(3));
+        thread::sleep(time::Duration::from_millis(3));
         if let Some(ref s) = s {
             manager.step(s.clone());
         }
@@ -120,5 +119,4 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    Ok(())
 }

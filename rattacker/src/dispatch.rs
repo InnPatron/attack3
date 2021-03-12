@@ -198,7 +198,7 @@ impl Manager {
         dispatcher: Rc<T>,
         axis: Axis,
         config: AxisMouseConfig,
-    ) -> Box<Fn(f32) -> ()> {
+    ) -> Box<dyn Fn(f32) -> ()> {
         match config.mouse_mode {
             MouseMode::Constant(c) => Box::new(move |f| {
                 if f.abs() < config.deadzone {
