@@ -1,4 +1,5 @@
 use std::fmt;
+use std::rc::Rc;
 
 use super::raw_input::Packet;
 use super::config::*;
@@ -14,9 +15,27 @@ macro_rules! handler {
         Box::new((move || tmp.key_up($k))) as Box<dyn Fn() -> ()>
     }};
 
+    (UPM => $d: expr, $k: expr) => {{
+        let tmp = $d.clone();
+        Box::new((move |_| tmp.key_up($k))) as Box<dyn Fn(f32) -> ()>
+    }};
+
     (DOWN => $d: expr, $k: expr) => {{
         let tmp = $d.clone();
         Box::new((move || tmp.key_down($k))) as Box<dyn Fn() -> ()>
+    }};
+
+    (DOWNM => $d: expr, $k: expr) => {{
+        let tmp = $d.clone();
+        Box::new((move |_| tmp.key_down($k))) as Box<dyn Fn(f32) -> ()>
+    }};
+
+    (NOP) => {{
+        Box::new(|| ())
+    }};
+
+    (NOPM) => {{
+        Box::new(|_| ())
     }};
 }
 
@@ -24,6 +43,8 @@ pub trait Dispatcher {
     fn from_cfg(cfg: &Config) -> Self;
     fn key_up(&self, k: Key);
     fn key_down(&self, k: Key);
+    fn rel_mouse_x(&self, r: i32);
+    fn rel_mouse_y(&self, r: i32);
 }
 
 
@@ -42,6 +63,8 @@ pub struct Manager {
     x_exit_deadzone_positive: Box<dyn Fn() -> ()>,
     y_exit_deadzone_positive: Box<dyn Fn() -> ()>,
 
+    axis_tracker: Box<dyn Fn(f32, f32, f32) -> ()>,
+
     x_deadzone: f32,
     y_deadzone: f32,
 }
@@ -52,7 +75,6 @@ impl Manager {
     pub fn new(cfg: Config) -> Self {
         #[cfg(target_os = "windows")]
         use super::win_input as winput;
-        use std::rc::Rc;
 
         let dispatcher = Rc::new(winput::WinDispatch::from_cfg(&cfg));
 
@@ -117,11 +139,80 @@ impl Manager {
                     x_exit_deadzone_positive,
                     y_exit_deadzone_positive,
 
+                    // NOP
+                    axis_tracker: Box::new(|_, _, _| ()),
 
                     x_deadzone: x_axis.deadzone,
                     y_deadzone: y_axis.deadzone,
                 }
             }
+
+            JoystickConfig::Mouse {
+                x_axis,
+                y_axis,
+            } => {
+
+                Manager {
+                    previous_state: None,
+
+                    button_up,
+                    button_down,
+
+                    x_enter_deadzone_negative: handler!(NOP),
+                    y_enter_deadzone_negative: handler!(NOP),
+
+                    x_enter_deadzone_positive: handler!(NOP),
+                    y_enter_deadzone_positive: handler!(NOP),
+
+                    x_exit_deadzone_negative: handler!(NOP),
+                    y_exit_deadzone_negative: handler!(NOP),
+
+                    x_exit_deadzone_positive: handler!(NOP),
+                    y_exit_deadzone_positive: handler!(NOP),
+
+                    axis_tracker: {
+                        let x_handler = Manager::mouse_mode_handler(
+                            dispatcher.clone(),
+                            Axis::X,
+                            x_axis.clone(),
+                        );
+                        let y_handler = Manager::mouse_mode_handler(
+                            dispatcher.clone(),
+                            Axis::Y,
+                            y_axis.clone(),
+                        );
+                        Box::new(move |x, y, _| {
+                            x_handler(x);
+                            y_handler(y);
+                        })
+                    },
+
+                    x_deadzone: x_axis.deadzone,
+                    y_deadzone: y_axis.deadzone,
+                }
+            }
+        }
+    }
+
+    fn mouse_mode_handler<T: 'static + Dispatcher>(
+        dispatcher: Rc<T>,
+        axis: Axis,
+        config: AxisMouseConfig,
+    ) -> Box<Fn(f32) -> ()> {
+        match config.mouse_mode {
+            MouseMode::Constant(c) => Box::new(move |f| {
+                if f.abs() < config.deadzone {
+                    return;
+                }
+                let r = (f.signum() as i32) * c;
+                match axis {
+                    Axis::X => dispatcher.rel_mouse_x(r),
+                    Axis::Y => dispatcher.rel_mouse_y(r),
+                    Axis::Z => panic!("Cannot have mouse Z axis movement"),
+                }
+            }),
+
+            MouseMode::Linear { .. } => todo!("MouseMode::Linear dispatch handler"),
         }
     }
 
@@ -167,6 +258,8 @@ impl Manager {
             x_exit_deadzone_positive: printHandler!("x-axis exit deadzone +"),
             y_exit_deadzone_positive: printHandler!("y-axis exit deadzone +"),
 
+            // NOP
+            axis_tracker: Box::new(|_, _, _| ()),
 
             x_deadzone: 0.5,
             y_deadzone: 0.5,
@@ -198,6 +291,8 @@ impl Manager {
                 let ns_y = ns.y_axis.abs();
                 // let ns_z = ns.z_axis.abs();
 
+                (self.axis_tracker)(ns.x_axis, ns.y_axis, 0.0);
+
                 if ps_x > self.x_deadzone && ns_x <= self.x_deadzone {
                     if ns.x_axis >= 0.0 {
                         (self.x_enter_deadzone_positive)();
@@ -225,13 +320,11 @@ impl Manager {
                         (self.y_exit_deadzone_negative)();
                     }
                 }
-
                 self.previous_state = Some(ns);
             }
 
             None => {
                 self.previous_state = Some(ns);
-
             }
         }
     }

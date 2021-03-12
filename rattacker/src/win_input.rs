@@ -2,7 +2,7 @@ use std::mem;
 use std::collections::HashMap;
 
 use super::dispatch::Dispatcher;
-use super::config::{ Config, Key };
+use super::config::{ Config, Key, Mode, Axis};
 
 use bindings::windows::win32::keyboard_and_mouse_input::{
     SendInput,
@@ -16,12 +16,35 @@ use bindings::windows::win32::windows_and_messaging::{
     GetMessageExtraInfo,
 };
 
-const TAG_KEY: u32 = 1;
-const KEY_UP: u32 = 0x0002;
-
 pub struct WinDispatch {
+    mode: Mode,
     key_down: HashMap<Key, Input>,
     key_up: HashMap<Key, Input>,
+}
+
+impl WinDispatch {
+    fn cache_key(&mut self, k: &Key, mode: Mode) {
+        if self.key_down.contains_key(k) {
+            return;
+        }
+
+        match mode {
+            Mode::DirectX => {
+                self.key_down.insert(k.clone(),
+                Input::new_directx_key(k.clone(), false));
+                self.key_up.insert(k.clone(),
+                Input::new_directx_key(k.clone(), true));
+            }
+
+            Mode::Normal => {
+                self.key_down.insert(k.clone(),
+                Input::new_ascii_key(k.clone(), false));
+                self.key_up.insert(k.clone(),
+                Input::new_ascii_key(k.clone(), true));
+
+            }
+        }
+    }
 }
 
 impl Dispatcher for WinDispatch {
@@ -29,9 +52,14 @@ impl Dispatcher for WinDispatch {
         use super::config::*;
 
         let mut disp = WinDispatch {
+            mode: cfg.mode.clone(),
             key_down: HashMap::new(),
             key_up: HashMap::new(),
         };
+
+        for k in cfg.buttons.iter() {
+            disp.cache_key(k, cfg.mode);
+        }
 
         match cfg.joystick {
             JoystickConfig::Keys {
@@ -46,30 +74,18 @@ impl Dispatcher for WinDispatch {
                 ];
                 // dbg!(joy_keys);
 
-
-                for k in cfg.buttons.iter().chain(joy_keys.iter()) {
-                    if disp.key_down.contains_key(k) {
-                        continue;
-                    }
-
-                    match cfg.mode {
-                        Mode::DirectX => {
-                            disp.key_down.insert(k.clone(),
-                                Input::new_directx_key(k.clone(), false));
-                            disp.key_up.insert(k.clone(),
-                                Input::new_directx_key(k.clone(), true));
-                        }
-
-                        Mode::Normal => {
-                            disp.key_down.insert(k.clone(),
-                                Input::new_ascii_key(k.clone(), false));
-                            disp.key_up.insert(k.clone(),
-                                Input::new_ascii_key(k.clone(), true));
-
-                        }
-                    }
+                for k in joy_keys.iter() {
+                    disp.cache_key(k, cfg.mode);
                 }
 
+                disp
+            }
+
+            JoystickConfig::Mouse {
+                x_axis,
+                y_axis,
+            } => {
+                // Do no pre-caching for now
                 disp
             }
         }
@@ -94,6 +110,36 @@ impl Dispatcher for WinDispatch {
             SendInput(1,
                       mem::transmute(input),     // TODO: remove when windows bindings can handle INPUT
                       mem::size_of::<Input>() as i32);
+        }
+    }
+
+    fn rel_mouse_x(&self, r: i32) {
+        // println!("Attempting to send rel_x: {}", r);
+        match self.mode {
+            Mode::DirectX | Mode::Normal => {
+                unsafe {
+                    // TODO: check if we need to extend the lifetime of input
+                    let input = Input::new_mouse_rel(r, 0);
+                    let input = &input as *const _;
+                    SendInput(1, mem::transmute(input),
+                    mem::size_of::<Input>() as i32);
+                }
+            }
+        }
+    }
+
+    fn rel_mouse_y(&self, r: i32) {
+        // println!("Attempting to send rel_y: {}", r);
+        match self.mode {
+            Mode::DirectX | Mode::Normal => {
+                unsafe {
+                    // TODO: check if we need to extend the lifetime of input
+                    let input = Input::new_mouse_rel(0, r);
+                    let input = &input as *const _;
+                    SendInput(1, mem::transmute(input),
+                    mem::size_of::<Input>() as i32);
+                }
+            }
         }
     }
 }
@@ -231,6 +277,11 @@ fn directx_virtual_key(k: Key) -> u16 {
     }
 }
 
+const MOUSEEVENTF_MOVE: u32 = 0x0001;
+const TAG_MOUSE: u32 = 0;
+const TAG_KEY: u32 = 1;
+const KEY_UP: u32 = 0x0002;
+
 /// TODO: windows bindings does not support the INPUT type
 ///typedef struct tagINPUT {
 ///  DWORD type;
@@ -274,6 +325,22 @@ impl Input {
                     dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
                 }),
             },
+        }
+    }
+
+    fn new_mouse_rel(x_amount: i32, y_amount: i32) -> Self {
+        Input {
+            tag: TAG_MOUSE,
+            union: InputUnion {
+                mi: mem::ManuallyDrop::new(MOUSEINPUT {
+                    dx: x_amount,
+                    dy: y_amount,
+                    mouse_data: 0x0,
+                    dw_flags: MOUSEEVENTF_MOVE,
+                    time: 0,
+                    dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
+                })
+            }
         }
     }
 }

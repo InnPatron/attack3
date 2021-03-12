@@ -14,11 +14,40 @@ pub enum Mode {
     DirectX,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Axis {
+    X,
+    Y,
+    Z,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum JoystickConfig {
     Keys {
         x_axis: AxisKeyConfig,
         y_axis: AxisKeyConfig,
+    },
+
+    Mouse {
+        x_axis: AxisMouseConfig,
+        y_axis: AxisMouseConfig,
+    },
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct AxisMouseConfig {
+    pub mouse_mode: MouseMode,
+    pub deadzone: f32,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum MouseMode {
+    Constant(i32),
+    Linear {
+        min: i32,
+        max: i32,
+        m: i32,
+        b: i32,
     },
 }
 

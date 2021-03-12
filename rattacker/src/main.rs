@@ -26,10 +26,10 @@ const PID: u16 = 0xc214;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = Config {
-        mode: Mode::DirectX,
+        mode: Mode::Normal,
         buttons: [
             // b1
-            Key::K1,
+            Key::A,
             // b2
             Key::K2,
             // b3
@@ -51,15 +51,25 @@ fn main() -> Result<(), Box<dyn Error>> {
             // b11
             Key::Escape,
         ],
-        joystick: JoystickConfig::Keys {
-            x_axis: AxisKeyConfig {
-                positive: Key::F8,
-                negative: Key::F7,
+        //joystick: JoystickConfig::Keys {
+        //    x_axis: AxisKeyConfig {
+        //        positive: Key::F8,
+        //        negative: Key::F7,
+        //        deadzone: 0.35,
+        //    },
+        //    y_axis: AxisKeyConfig {
+        //        positive: Key::W,
+        //        negative: Key::S,
+        //        deadzone: 0.40,
+        //    }
+        //}
+        joystick: JoystickConfig::Mouse {
+            x_axis: AxisMouseConfig {
+                mouse_mode: MouseMode::Constant(10),
                 deadzone: 0.35,
             },
-            y_axis: AxisKeyConfig {
-                positive: Key::W,
-                negative: Key::S,
+            y_axis: AxisMouseConfig {
+                mouse_mode: MouseMode::Constant(-10),
                 deadzone: 0.40,
             }
         }
@@ -71,6 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("Attempting to open the Attack3...");
     let attack3 = hidapi.open(VID, PID)?;
+    attack3.set_blocking_mode(false)?;
     println!("Opened the Attack3");
 
     println!("Attempting to read from the Attack3...");
@@ -78,9 +89,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut zeroed = false;
     let mut buffer = [0u8; 1024];
     let mut zero = [0, 0];
+    let mut s: Option<State> = None;
     loop {
         let read_len = attack3.read(&mut buffer);
         if let Ok(read_len) = read_len {
+            if read_len == 0 {
+                continue;
+            }
             let packet_count = read_len / PACKET_LENGTH;
             // println!("Received {} packets", packet_count);
             for i in 0..packet_count {
@@ -92,11 +107,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     zero[1] = p.y_axis;
                     zeroed = true;
                 }
+                s = Some(State::from_packet(zero, p));
                 // println!("{}", p);
-                let s = State::from_packet(zero, p);
                 // println!("{}", s);
-                manager.step(s);
             }
+        }
+
+        if let Some(ref s) = s {
+            manager.step(s.clone());
         }
     }
     Ok(())
