@@ -1,27 +1,29 @@
+use serde::{Serialize, Deserialize};
+
 pub const BUTTON_LEN: usize = 11;
 
 // TODO: z-axis
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     pub mode: Mode,
     pub buttons: [Key; BUTTON_LEN],
     pub joystick: JoystickConfig,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Mode {
     Normal,
     DirectX,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Axis {
     X,
     Y,
     Z,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum JoystickConfig {
     Keys {
         x_axis: AxisKeyConfig,
@@ -34,13 +36,13 @@ pub enum JoystickConfig {
     },
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AxisMouseConfig {
     pub mouse_mode: MouseMode,
     pub deadzone: f32,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum MouseMode {
     Constant(i32),
     Linear {
@@ -51,7 +53,7 @@ pub enum MouseMode {
     },
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AxisKeyConfig {
     pub positive: Key,
     pub negative: Key,
@@ -59,7 +61,7 @@ pub struct AxisKeyConfig {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Key {
     A,
     B,

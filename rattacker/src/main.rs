@@ -2,10 +2,14 @@ extern crate hidapi;
 #[cfg(target_os = "windows")]
 extern crate bindings;
 
+use std::fs::File;
+use std::io::BufReader;
+use std::env;
 use std::{thread, time};
 use std::error::Error;
 
 use hidapi::{HidApi};
+use serde_json;
 
 mod raw_input;
 mod config;
@@ -25,55 +29,16 @@ const VID: u16 = 0x046d;
 const PID: u16 = 0xc214;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let cfg = Config {
-        mode: Mode::Normal,
-        buttons: [
-            // b1
-            Key::LMB,
-            // b2
-            Key::K2,
-            // b3
-            Key::RMB,
-            // b4
-            Key::K4,
-            // b5
-            Key::K5,
-            // b6
-            Key::Ctrl,
-            // b7
-            Key::Alt,
-            // b8
-            Key::F5,
-            // b9
-            Key::V,
-            // b10
-            Key::F3,
-            // b11
-            Key::Escape,
-        ],
-        //joystick: JoystickConfig::Keys {
-        //    x_axis: AxisKeyConfig {
-        //        positive: Key::F8,
-        //        negative: Key::F7,
-        //        deadzone: 0.35,
-        //    },
-        //    y_axis: AxisKeyConfig {
-        //        positive: Key::W,
-        //        negative: Key::S,
-        //        deadzone: 0.40,
-        //    }
-        //}
-        joystick: JoystickConfig::Mouse {
-            x_axis: AxisMouseConfig {
-                mouse_mode: MouseMode::Constant(2),
-                deadzone: 0.25,
-            },
-            y_axis: AxisMouseConfig {
-                mouse_mode: MouseMode::Constant(-2),
-                deadzone: 0.20,
-            }
-        }
-    };
+    let cfg_path = env::args()
+        .skip(1)
+        .next()
+        .expect("No JSON config path");
+
+    println!("Attempting to JSON config from '{}'", cfg_path);
+
+    let f = File::open(cfg_path)?;
+    let cfg: Config = serde_json::from_reader(BufReader::new(f))?;
+
 
     let mut manager = Manager::new(cfg);
     // let mut manager = Manager::dbg();
