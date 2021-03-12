@@ -10,6 +10,7 @@ pub struct Config {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Mode {
+    Normal,
     DirectX,
 }
 
