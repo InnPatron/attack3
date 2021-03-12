@@ -1,7 +1,8 @@
 use std::mem;
 use std::collections::HashMap;
 
-use super::dispatch::{ Config, Dispatcher, Key };
+use super::dispatch::Dispatcher;
+use super::config::{ Config, Key };
 
 use bindings::windows::win32::keyboard_and_mouse_input::{
     SendInput,
