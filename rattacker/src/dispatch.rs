@@ -1,7 +1,7 @@
 use std::fmt;
 
 use super::raw_input::Packet;
-use super::config::{ Config, Key, BUTTON_LEN };
+use super::config::*;
 
 macro_rules! printHandler {
     ($msg: expr) => (Box::new(|| { println!("{}", $msg); }));
@@ -32,18 +32,18 @@ pub struct Manager {
     button_up: Vec<Box<dyn Fn() -> ()>>,
     button_down: Vec<Box<dyn Fn() -> ()>>,
 
-    x_enter_dead_zone_negative: Box<dyn Fn() -> ()>,
-    y_enter_dead_zone_negative: Box<dyn Fn() -> ()>,
-    x_enter_dead_zone_positive: Box<dyn Fn() -> ()>,
-    y_enter_dead_zone_positive: Box<dyn Fn() -> ()>,
+    x_enter_deadzone_negative: Box<dyn Fn() -> ()>,
+    y_enter_deadzone_negative: Box<dyn Fn() -> ()>,
+    x_enter_deadzone_positive: Box<dyn Fn() -> ()>,
+    y_enter_deadzone_positive: Box<dyn Fn() -> ()>,
 
-    x_exit_dead_zone_negative: Box<dyn Fn() -> ()>,
-    y_exit_dead_zone_negative: Box<dyn Fn() -> ()>,
-    x_exit_dead_zone_positive: Box<dyn Fn() -> ()>,
-    y_exit_dead_zone_positive: Box<dyn Fn() -> ()>,
+    x_exit_deadzone_negative: Box<dyn Fn() -> ()>,
+    y_exit_deadzone_negative: Box<dyn Fn() -> ()>,
+    x_exit_deadzone_positive: Box<dyn Fn() -> ()>,
+    y_exit_deadzone_positive: Box<dyn Fn() -> ()>,
 
-    x_dead_zone: f32,
-    y_dead_zone: f32,
+    x_deadzone: f32,
+    y_deadzone: f32,
 }
 
 impl Manager {
@@ -74,47 +74,54 @@ impl Manager {
             button_up.push(Box::new(c1) as Box<dyn Fn() -> ()>);
             button_down.push(Box::new(c2) as Box<dyn Fn() -> ()>);
         }
-        let x_enter_dead_zone_negative =
-            handler!(UP => dispatcher, cfg.x_axis_negative);
-        let x_exit_dead_zone_negative =
-            handler!(DOWN => dispatcher, cfg.x_axis_negative);
+        match cfg.joystick {
+            JoystickConfig::Keys {
+                x_axis,
+                y_axis
+            } => {
+                let x_enter_deadzone_negative =
+                    handler!(UP => dispatcher, x_axis.negative);
+                let x_exit_deadzone_negative =
+                    handler!(DOWN => dispatcher, x_axis.negative);
 
-        let y_enter_dead_zone_negative =
-            handler!(UP => dispatcher, cfg.y_axis_negative);
-        let y_exit_dead_zone_negative =
-            handler!(DOWN => dispatcher, cfg.y_axis_negative);
+                let y_enter_deadzone_negative =
+                    handler!(UP => dispatcher, y_axis.negative);
+                let y_exit_deadzone_negative =
+                    handler!(DOWN => dispatcher, y_axis.negative);
 
-        let x_enter_dead_zone_positive =
-            handler!(UP => dispatcher, cfg.x_axis_positive);
-        let x_exit_dead_zone_positive =
-            handler!(DOWN => dispatcher, cfg.x_axis_positive);
+                let x_enter_deadzone_positive =
+                    handler!(UP => dispatcher, x_axis.positive);
+                let x_exit_deadzone_positive =
+                    handler!(DOWN => dispatcher, x_axis.positive);
 
-        let y_enter_dead_zone_positive =
-            handler!(UP => dispatcher, cfg.y_axis_positive);
-        let y_exit_dead_zone_positive =
-            handler!(DOWN => dispatcher, cfg.y_axis_positive);
+                let y_enter_deadzone_positive =
+                    handler!(UP => dispatcher, y_axis.positive);
+                let y_exit_deadzone_positive =
+                    handler!(DOWN => dispatcher, y_axis.positive);
 
-        Manager {
-            previous_state: None,
+                Manager {
+                    previous_state: None,
 
-            button_up,
-            button_down,
+                    button_up,
+                    button_down,
 
-            x_enter_dead_zone_negative,
-            y_enter_dead_zone_negative,
+                    x_enter_deadzone_negative,
+                    y_enter_deadzone_negative,
 
-            x_enter_dead_zone_positive,
-            y_enter_dead_zone_positive,
+                    x_enter_deadzone_positive,
+                    y_enter_deadzone_positive,
 
-            x_exit_dead_zone_negative,
-            y_exit_dead_zone_negative,
+                    x_exit_deadzone_negative,
+                    y_exit_deadzone_negative,
 
-            x_exit_dead_zone_positive,
-            y_exit_dead_zone_positive,
+                    x_exit_deadzone_positive,
+                    y_exit_deadzone_positive,
 
 
-            x_dead_zone: cfg.x_dead_zone,
-            y_dead_zone: cfg.y_dead_zone,
+                    x_deadzone: x_axis.deadzone,
+                    y_deadzone: y_axis.deadzone,
+                }
+            }
         }
     }
 
@@ -148,21 +155,21 @@ impl Manager {
                 printHandler!("down button10"),
                 printHandler!("down button11"),
             ],
-            x_enter_dead_zone_negative: printHandler!("x-axis enter deadzone -"),
-            y_enter_dead_zone_negative: printHandler!("y-axis enter deadzone -"),
+            x_enter_deadzone_negative: printHandler!("x-axis enter deadzone -"),
+            y_enter_deadzone_negative: printHandler!("y-axis enter deadzone -"),
 
-            x_enter_dead_zone_positive: printHandler!("x-axis enter deadzone +"),
-            y_enter_dead_zone_positive: printHandler!("y-axis enter deadzone +"),
+            x_enter_deadzone_positive: printHandler!("x-axis enter deadzone +"),
+            y_enter_deadzone_positive: printHandler!("y-axis enter deadzone +"),
 
-            x_exit_dead_zone_negative: printHandler!("x-axis exit deadzone -"),
-            y_exit_dead_zone_negative: printHandler!("y-axis exit deadzone -"),
+            x_exit_deadzone_negative: printHandler!("x-axis exit deadzone -"),
+            y_exit_deadzone_negative: printHandler!("y-axis exit deadzone -"),
 
-            x_exit_dead_zone_positive: printHandler!("x-axis exit deadzone +"),
-            y_exit_dead_zone_positive: printHandler!("y-axis exit deadzone +"),
+            x_exit_deadzone_positive: printHandler!("x-axis exit deadzone +"),
+            y_exit_deadzone_positive: printHandler!("y-axis exit deadzone +"),
 
 
-            x_dead_zone: 0.5,
-            y_dead_zone: 0.5,
+            x_deadzone: 0.5,
+            y_deadzone: 0.5,
         }
     }
 
@@ -191,31 +198,31 @@ impl Manager {
                 let ns_y = ns.y_axis.abs();
                 // let ns_z = ns.z_axis.abs();
 
-                if ps_x > self.x_dead_zone && ns_x <= self.x_dead_zone {
+                if ps_x > self.x_deadzone && ns_x <= self.x_deadzone {
                     if ns.x_axis >= 0.0 {
-                        (self.x_enter_dead_zone_positive)();
+                        (self.x_enter_deadzone_positive)();
                     } else {
-                        (self.x_enter_dead_zone_negative)();
+                        (self.x_enter_deadzone_negative)();
                     }
-                } else if ps_x <= self.x_dead_zone && ns_x > self.x_dead_zone {
+                } else if ps_x <= self.x_deadzone && ns_x > self.x_deadzone {
                     if ns.x_axis >= 0.0 {
-                        (self.x_exit_dead_zone_positive)();
+                        (self.x_exit_deadzone_positive)();
                     } else {
-                        (self.x_exit_dead_zone_negative)();
+                        (self.x_exit_deadzone_negative)();
                     }
                 }
 
-                if ps_y > self.y_dead_zone && ns_y <= self.y_dead_zone {
+                if ps_y > self.y_deadzone && ns_y <= self.y_deadzone {
                     if ns.y_axis >= 0.0 {
-                        (self.y_enter_dead_zone_positive)();
+                        (self.y_enter_deadzone_positive)();
                     } else {
-                        (self.y_enter_dead_zone_negative)();
+                        (self.y_enter_deadzone_negative)();
                     }
-                } else if ps_y <= self.y_dead_zone && ns_y > self.y_dead_zone {
+                } else if ps_y <= self.y_deadzone && ns_y > self.y_deadzone {
                     if ns.y_axis >= 0.0 {
-                        (self.y_exit_dead_zone_positive)();
+                        (self.y_exit_deadzone_positive)();
                     } else {
-                        (self.y_exit_dead_zone_negative)();
+                        (self.y_exit_deadzone_negative)();
                     }
                 }
 

@@ -4,14 +4,22 @@ pub const BUTTON_LEN: usize = 11;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Config {
     pub buttons: [Key; BUTTON_LEN],
-    pub x_axis_positive: Key,
-    pub x_axis_negative: Key,
+    pub joystick: JoystickConfig,
+}
 
-    pub y_axis_positive: Key,
-    pub y_axis_negative: Key,
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum JoystickConfig {
+    Keys {
+        x_axis: AxisKeyConfig,
+        y_axis: AxisKeyConfig,
+    },
+}
 
-    pub x_dead_zone: f32,
-    pub y_dead_zone: f32,
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct AxisKeyConfig {
+    pub positive: Key,
+    pub negative: Key,
+    pub deadzone: f32,
 }
 
 #[allow(dead_code)]

@@ -26,29 +26,39 @@ pub struct WinDispatch {
 
 impl Dispatcher for WinDispatch {
     fn from_cfg(cfg: &Config) -> Self {
+        use super::config::*;
+
         let mut disp = WinDispatch {
             key_down: HashMap::new(),
             key_up: HashMap::new(),
         };
 
-        let joy_keys = [
-            cfg.x_axis_positive,
-            cfg.x_axis_negative,
-            cfg.y_axis_positive,
-            cfg.y_axis_negative,
-        ];
-        // dbg!(joy_keys);
+        match cfg.joystick {
+            JoystickConfig::Keys {
+                x_axis,
+                y_axis
+            } => {
+                let joy_keys = [
+                    x_axis.positive,
+                    x_axis.negative,
+                    y_axis.positive,
+                    y_axis.negative,
+                ];
+                // dbg!(joy_keys);
 
-        for k in cfg.buttons.iter().chain(joy_keys.iter()) {
-            if disp.key_down.contains_key(k) {
-                continue;
+
+                for k in cfg.buttons.iter().chain(joy_keys.iter()) {
+                    if disp.key_down.contains_key(k) {
+                        continue;
+                    }
+
+                    disp.key_down.insert(k.clone(), Input::new(k.clone(), false));
+                    disp.key_up.insert(k.clone(), Input::new(k.clone(), true));
+                }
+
+                disp
             }
-
-            disp.key_down.insert(k.clone(), Input::new(k.clone(), false));
-            disp.key_up.insert(k.clone(), Input::new(k.clone(), true));
         }
-
-        disp
     }
 
     fn key_up(&self, k: Key) {

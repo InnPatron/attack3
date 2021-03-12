@@ -50,14 +50,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             // b11
             Key::Escape,
         ],
-        x_axis_positive: Key::F8,
-        x_axis_negative: Key::F7,
-
-        y_axis_positive: Key::W,
-        y_axis_negative: Key::S,
-
-        x_dead_zone: 0.35,
-        y_dead_zone: 0.4,
+        joystick: JoystickConfig::Keys {
+            x_axis: AxisKeyConfig {
+                positive: Key::F8,
+                negative: Key::F7,
+                deadzone: 0.35,
+            },
+            y_axis: AxisKeyConfig {
+                positive: Key::W,
+                negative: Key::S,
+                deadzone: 0.40,
+            }
+        }
     };
 
     let mut manager = Manager::new(cfg);
