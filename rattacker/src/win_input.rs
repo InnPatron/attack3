@@ -52,8 +52,14 @@ impl Dispatcher for WinDispatch {
                         continue;
                     }
 
-                    disp.key_down.insert(k.clone(), Input::new(k.clone(), false));
-                    disp.key_up.insert(k.clone(), Input::new(k.clone(), true));
+                    match cfg.mode {
+                        Mode::DirectX => {
+                            disp.key_down.insert(k.clone(),
+                                Input::new_directx_key(k.clone(), false));
+                            disp.key_up.insert(k.clone(),
+                                Input::new_directx_key(k.clone(), true));
+                        }
+                    }
                 }
 
                 disp
@@ -85,7 +91,7 @@ impl Dispatcher for WinDispatch {
 }
 
 // DirectX has its own keyboard scancodes
-fn to_virtual_key(k: Key) -> u16 {
+fn directx_virtual_key(k: Key) -> u16 {
     match k {
         Key::A => 0x1E,
         Key::B => 0x30,
@@ -167,13 +173,13 @@ struct Input {
 }
 
 impl Input {
-    fn new(k: Key, up: bool) -> Self {
+    fn new_directx_key(k: Key, up: bool) -> Self {
         Input {
             tag: TAG_KEY,
             union: InputUnion {
                 ki: mem::ManuallyDrop::new(KEYBDINPUT {
                     w_vk: 0,
-                    w_scan: to_virtual_key(k),
+                    w_scan: directx_virtual_key(k),
                     dw_flags: if up { KEY_UP } else { 0x0 } | 0x0004 | 0x0008,
                     time: 0,
                     dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,

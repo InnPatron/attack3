@@ -3,8 +3,14 @@ pub const BUTTON_LEN: usize = 11;
 // TODO: z-axis
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Config {
+    pub mode: Mode,
     pub buttons: [Key; BUTTON_LEN],
     pub joystick: JoystickConfig,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Mode {
+    DirectX,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

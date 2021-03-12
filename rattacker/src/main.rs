@@ -26,6 +26,7 @@ const PID: u16 = 0xc214;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cfg = Config {
+        mode: Mode::DirectX,
         buttons: [
             // b1
             Key::K1,
