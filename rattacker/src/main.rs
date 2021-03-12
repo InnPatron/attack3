@@ -2,6 +2,7 @@ extern crate hidapi;
 #[cfg(target_os = "windows")]
 extern crate bindings;
 
+use std::{thread, time};
 use std::error::Error;
 use std::fmt;
 
@@ -65,11 +66,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         //}
         joystick: JoystickConfig::Mouse {
             x_axis: AxisMouseConfig {
-                mouse_mode: MouseMode::Constant(10),
+                mouse_mode: MouseMode::Constant(1),
                 deadzone: 0.35,
             },
             y_axis: AxisMouseConfig {
-                mouse_mode: MouseMode::Constant(-10),
+                mouse_mode: MouseMode::Constant(-1),
                 deadzone: 0.40,
             }
         }
@@ -91,6 +92,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut zero = [0, 0];
     let mut s: Option<State> = None;
     loop {
+        // TODO: make polling rate configurable
+        std::thread::sleep(time::Duration::from_millis(3));
+        if let Some(ref s) = s {
+            manager.step(s.clone());
+        }
+
         let read_len = attack3.read(&mut buffer);
         if let Ok(read_len) = read_len {
             if read_len == 0 {
@@ -111,10 +118,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 // println!("{}", p);
                 // println!("{}", s);
             }
-        }
-
-        if let Some(ref s) = s {
-            manager.step(s.clone());
         }
     }
     Ok(())
