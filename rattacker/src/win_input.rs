@@ -356,6 +356,31 @@ struct Input {
 }
 
 impl Input {
+
+    fn new_mouse_key(k: Key, up: bool) -> Self {
+        let event = match (k, up) {
+            (Key::LMB, true) => MOUSEEVENTF_LEFTUP,
+            (Key::LMB, false) => MOUSEEVENTF_LEFTDOWN,
+            (Key::RMB, true) => MOUSEEVENTF_RIGHTUP,
+            (Key::RMB, false) => MOUSEEVENTF_RIGHTDOWN,
+            (k, _) => panic!("Unknown mouse button key: {:?}", k),
+        };
+
+        Input {
+            tag: TAG_MOUSE,
+            union: InputUnion {
+                mi: mem::ManuallyDrop::new(MOUSEINPUT {
+                    dx: 0,
+                    dy: 0,
+                    mouse_data: 0x0,
+                    dw_flags: event,
+                    time: 0,
+                    dw_extra_info: unsafe { GetMessageExtraInfo() }.0 as usize,
+                })
+            }
+        }
+    }
+
     fn new_directx_key(k: Key, up: bool) -> Self {
         Input {
             tag: TAG_KEY,

@@ -121,4 +121,11 @@ pub enum Key {
     K9,
 
     LMB,
+    RMB,
+}
+
+impl Key {
+    pub fn is_mouse(&self) -> bool {
+        *self == Key::LMB || *self == Key::RMB
+    }
 }
