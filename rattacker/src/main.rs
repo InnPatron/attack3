@@ -39,6 +39,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let f = File::open(cfg_path)?;
     let cfg: Config = serde_json::from_reader(BufReader::new(f))?;
 
+    println!("Read JSON config");
+
 
     let mut manager = Manager::new(cfg);
     // let mut manager = Manager::dbg();
@@ -49,7 +51,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     attack3.set_blocking_mode(false)?;
     println!("Opened the Attack3");
 
-    println!("Attempting to read from the Attack3...");
+    println!("Attempting to read from the Attack3 with polling delay {}...",
+             cfg.polling_delay);
 
     let mut zeroed = false;
     let mut buffer = [0u8; 1024];
@@ -57,7 +60,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut s: Option<State> = None;
     loop {
         // TODO: make polling rate configurable
-        thread::sleep(time::Duration::from_millis(3));
+        thread::sleep(time::Duration::from_millis(cfg.polling_delay));
         if let Some(ref s) = s {
             manager.step(s.clone());
         }
