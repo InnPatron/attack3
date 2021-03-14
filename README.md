@@ -4,6 +4,8 @@ User-space program that translates HID input from a Logitech Attack3 into keyboa
 
 Currently Windows only.
 
+Tested with Rust 1.50 but can probably use earlier versions.
+
 Takes a path to a JSON configuration file.
 * See `rattacker/joy-config` for examples
 * See `rattacker/src/config.rs` for details
