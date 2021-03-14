@@ -1,0 +1,40 @@
+{
+    "mode": "Normal",
+    "buttons": [
+        "LMB",
+        "K2",
+        "RMB",
+        "K4",
+        "K5",
+        "Ctrl",
+        "Alt",
+        "F5",
+        "V",
+        "F3",
+        "Escape"
+    ],
+    "joystick": {
+        "Mouse": {
+            "x_axis": {
+                "dots_per_pixel": {
+                    "Linear": {
+                        "m": 900,
+                        "bias": 20
+                    }
+                },
+                "dpi": 700,
+                "deadzone": 0.15
+            },
+            "y_axis": {
+                "dots_per_pixel": {
+                    "Linear": {
+                        "m": -900,
+                        "bias": 20
+                    }
+                },
+                "dpi": 700,
+                "deadzone": 0.05
+            }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "mode": "Normal",
+    "polling_delay": 0,
+    "buttons": [
+        "LMB",
+        "K2",
+        "RMB",
+        "K4",
+        "K5",
+        "Ctrl",
+        "Alt",
+        "F5",
+        "V",
+        "F3",
+        "Escape"
+    ],
+    "joystick": {
+        "Mouse": {
+            "x_axis": {
+                "mouse_mode": {
+                    "Constant": 1
+                },
+                "deadzone": 0.25
+            },
+            "y_axis": {
+                "mouse_mode": {
+                    "Constant": -1
+                },
+                "deadzone": 0.2
+            }
+        }
+    }
+}

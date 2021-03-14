@@ -1,0 +1,48 @@
+{
+    "mode": "Normal",
+    "buttons": [
+        "LMB",
+        "K2",
+        "RMB",
+        "K4",
+        "K5",
+        "Ctrl",
+        "Alt",
+        "F5",
+        "V",
+        "F3",
+        "Escape"
+    ],
+    "joystick": {
+        "Mouse": {
+            "x_axis": {
+                "dots_per_pixel": {
+                    "Logistic": {
+                        "target": 2100,
+                        "a": 2.0,
+                        "b": 130,
+                        "c": 1.7,
+                        "d": -0.8,
+                        "h": 0.0
+                    }
+                },
+                "dpi": 700,
+                "deadzone": 0.15
+            },
+            "y_axis": {
+                "dots_per_pixel": {
+                    "Logistic": {
+                        "target": -2100,
+                        "a": 2.0,
+                        "b": 130,
+                        "c": 1.7,
+                        "d": -0.8,
+                        "h": 0.0
+                    }
+                },
+                "dpi": 700,
+                "deadzone": 0.05
+            }
+        }
+    }
+}
