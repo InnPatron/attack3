@@ -2,15 +2,15 @@
     "mode": "Normal",
     "buttons": [
         "LMB",
-        "Enter",
+        null,
         "RMB",
-        "K4",
-        "K5",
-        "Ctrl",
-        "Alt",
-        "F5",
-        "V",
-        "F3",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         "Escape"
     ],
     "joystick": {

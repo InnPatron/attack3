@@ -66,7 +66,9 @@ impl Dispatcher for WinDispatch {
         };
 
         for k in cfg.buttons.iter() {
-            disp.cache_key(k, cfg.mode);
+            if let Some(k) = k {
+                disp.cache_key(k, cfg.mode);
+            }
         }
 
         match cfg.joystick {

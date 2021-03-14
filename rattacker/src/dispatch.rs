@@ -82,20 +82,29 @@ impl Manager {
         let mut button_up = Vec::new();
         let mut button_down = Vec::new();
         for k in cfg.buttons.iter().cloned() {
-            let d1 = dispatcher.clone();
-            let c1 = move || {
-                // println!("Key up: {:?}", k);
-                d1.key_up(k);
-            };
+            match k {
+                Some(k) => {
+                    let d1 = dispatcher.clone();
+                    let c1 = move || {
+                        // println!("Key up: {:?}", k);
+                        d1.key_up(k);
+                    };
 
-            let d2 = dispatcher.clone();
-            let c2 = move || {
-                // println!("Key down: {:?}", k);
-                d2.key_down(k);
-            };
+                    let d2 = dispatcher.clone();
+                    let c2 = move || {
+                        // println!("Key down: {:?}", k);
+                        d2.key_down(k);
+                    };
 
-            button_up.push(Box::new(c1) as TriggerHandler);
-            button_down.push(Box::new(c2) as TriggerHandler);
+                    button_up.push(Box::new(c1) as TriggerHandler);
+                    button_down.push(Box::new(c2) as TriggerHandler);
+                }
+
+                None => {
+                    button_up.push(handler!(NOP));
+                    button_down.push(handler!(NOP));
+                }
+            }
         }
         match cfg.joystick {
             JoystickConfig::Keys {
