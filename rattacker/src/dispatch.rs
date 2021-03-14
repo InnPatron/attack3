@@ -254,6 +254,38 @@ impl Manager {
                     }
                 })
             },
+
+            MouseMode::Logistic { target, a, b, c, d, h } => {
+                let mut dots_moved_acc = 0.0;
+                Box::new(move |f| {
+                    if f.abs() < config.deadzone {
+                        return;
+                    }
+
+                    let inches_moved = f;
+                    let dots_moved = inches_moved * config.dpi;
+                    dots_moved_acc += dots_moved;
+
+                    // Apply dots-per-pixel-function g:
+                    //   coef(f) = [1 / (c + (b * e)^(|f| + d))] * a + h
+                    //   g(f) = coef(f) * target
+                    let coef = {
+                        let exponent = f.abs() + d;
+                        let denom = c + b.powf(exponent) + exponent.exp();
+                        1.0 / denom * a + h
+                    };
+                    let dots_per_pixel = coef * target;
+
+                    let pixels_moved =  (dots_moved_acc / dots_per_pixel) as i32;
+                    dots_moved_acc = dots_moved_acc % dots_per_pixel;
+
+                    match axis {
+                        Axis::X => dispatcher.rel_mouse_x(pixels_moved),
+                        Axis::Y => dispatcher.rel_mouse_y(pixels_moved),
+                        Axis::Z => panic!("Cannot have mouse Z axis movement"),
+                    }
+                })
+            },
         }
     }
 

@@ -60,6 +60,17 @@ pub enum MouseMode {
         m: f32,
         bias: f32,
     },
+
+    /// coef(f) = [1 / (c + (b * e)^(|f| + d))] * a + h
+    /// g(f) = coef(f) * target
+    Logistic {
+        target: f32,
+        a: f32,
+        b: f32,
+        c: f32,
+        d: f32,
+        h: f32,
+    },
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
