@@ -12,7 +12,7 @@ macro_rules! printHandler {
 macro_rules! handler {
     (UP => $d: expr, $k: expr) => {{
         let tmp = $d.clone();
-        Box::new((move || tmp.key_up($k))) as Box<dyn Fn() -> ()>
+        Box::new((move || tmp.key_up($k))) as TriggerHandler
     }};
 
     (UPM => $d: expr, $k: expr) => {{
@@ -22,7 +22,7 @@ macro_rules! handler {
 
     (DOWN => $d: expr, $k: expr) => {{
         let tmp = $d.clone();
-        Box::new((move || tmp.key_down($k))) as Box<dyn Fn() -> ()>
+        Box::new((move || tmp.key_down($k))) as TriggerHandler
     }};
 
     (DOWNM => $d: expr, $k: expr) => {{
@@ -47,21 +47,22 @@ pub trait Dispatcher {
     fn rel_mouse_y(&self, r: i32);
 }
 
+pub type TriggerHandler = Box<dyn Fn() -> ()>;
 
 pub struct Manager {
     previous_state: Option<State>,
-    button_up: Vec<Box<dyn Fn() -> ()>>,
-    button_down: Vec<Box<dyn Fn() -> ()>>,
+    button_up: Vec<TriggerHandler>,
+    button_down: Vec<TriggerHandler>,
 
-    x_enter_deadzone_negative: Box<dyn Fn() -> ()>,
-    y_enter_deadzone_negative: Box<dyn Fn() -> ()>,
-    x_enter_deadzone_positive: Box<dyn Fn() -> ()>,
-    y_enter_deadzone_positive: Box<dyn Fn() -> ()>,
+    x_enter_deadzone_negative: TriggerHandler,
+    y_enter_deadzone_negative: TriggerHandler,
+    x_enter_deadzone_positive: TriggerHandler,
+    y_enter_deadzone_positive: TriggerHandler,
 
-    x_exit_deadzone_negative: Box<dyn Fn() -> ()>,
-    y_exit_deadzone_negative: Box<dyn Fn() -> ()>,
-    x_exit_deadzone_positive: Box<dyn Fn() -> ()>,
-    y_exit_deadzone_positive: Box<dyn Fn() -> ()>,
+    x_exit_deadzone_negative: TriggerHandler,
+    y_exit_deadzone_negative: TriggerHandler,
+    x_exit_deadzone_positive: TriggerHandler,
+    y_exit_deadzone_positive: TriggerHandler,
 
     axis_tracker: Box<dyn FnMut(f32, f32, f32) -> ()>,
 
@@ -93,8 +94,8 @@ impl Manager {
                 d2.key_down(k);
             };
 
-            button_up.push(Box::new(c1) as Box<dyn Fn() -> ()>);
-            button_down.push(Box::new(c2) as Box<dyn Fn() -> ()>);
+            button_up.push(Box::new(c1) as TriggerHandler);
+            button_down.push(Box::new(c2) as TriggerHandler);
         }
         match cfg.joystick {
             JoystickConfig::Keys {
