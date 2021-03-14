@@ -10,7 +10,7 @@ pub const BUTTON_LEN: usize = 11;
 pub struct Config {
     pub mode: Mode,
     pub buttons: [Option<Key>; BUTTON_LEN],
-    pub joystick: JoystickConfig,
+    pub joystick: Option<JoystickConfig>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]

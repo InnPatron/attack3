@@ -72,10 +72,10 @@ impl Dispatcher for WinDispatch {
         }
 
         match cfg.joystick {
-            JoystickConfig::Keys {
+            Some(JoystickConfig::Keys {
                 x_axis,
                 y_axis
-            } => {
+            }) => {
                 let joy_keys = [
                     x_axis.positive,
                     x_axis.negative,
@@ -91,12 +91,14 @@ impl Dispatcher for WinDispatch {
                 disp
             }
 
-            JoystickConfig::Mouse {
+            Some(JoystickConfig::Mouse {
                 ..
-            } => {
+            }) => {
                 // Do no pre-caching for now
                 disp
             }
+
+            None => disp,
         }
     }
 

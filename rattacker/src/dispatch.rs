@@ -107,10 +107,10 @@ impl Manager {
             }
         }
         match cfg.joystick {
-            JoystickConfig::Keys {
+            Some(JoystickConfig::Keys {
                 x_axis,
                 y_axis
-            } => {
+            }) => {
                 let x_enter_deadzone_negative =
                     handler!(UP => dispatcher, x_axis.negative);
                 let x_exit_deadzone_negative =
@@ -157,10 +157,10 @@ impl Manager {
                 }
             }
 
-            JoystickConfig::Mouse {
+            Some(JoystickConfig::Mouse {
                 x_axis,
                 y_axis,
-            } => {
+            }) => {
 
                 Manager {
                     previous_state: None,
@@ -200,6 +200,30 @@ impl Manager {
                     x_deadzone: x_axis.deadzone,
                     y_deadzone: y_axis.deadzone,
                 }
+            }
+
+            None => Manager {
+                previous_state: None,
+
+                button_up,
+                button_down,
+
+                x_enter_deadzone_negative: handler!(NOP),
+                y_enter_deadzone_negative: handler!(NOP),
+
+                x_enter_deadzone_positive: handler!(NOP),
+                y_enter_deadzone_positive: handler!(NOP),
+
+                x_exit_deadzone_negative: handler!(NOP),
+                y_exit_deadzone_negative: handler!(NOP),
+
+                x_exit_deadzone_positive: handler!(NOP),
+                y_exit_deadzone_positive: handler!(NOP),
+
+                axis_tracker: Box::new(|_, _, _| ()),
+
+                x_deadzone: 2.0,
+                y_deadzone: 2.0,
             }
         }
     }
