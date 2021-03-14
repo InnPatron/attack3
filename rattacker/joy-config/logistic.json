@@ -19,6 +19,7 @@
                 "dots_per_pixel": {
                     "Logistic": {
                         "target": 2100,
+                        "min": 400,
                         "a": 2.0,
                         "b": 130,
                         "c": 1.7,
@@ -33,6 +34,7 @@
                 "dots_per_pixel": {
                     "Logistic": {
                         "target": -2100,
+                        "min": 400,
                         "a": 2.0,
                         "b": 130,
                         "c": 1.7,
