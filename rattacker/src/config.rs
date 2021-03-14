@@ -51,7 +51,11 @@ pub struct AxisMouseConfig {
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum MouseMode {
+
+    /// g(f) = c
     Constant(f32),
+
+    /// g(f) = (1 - |f|) * m + (bias * sign(m))
     Linear {
         m: f32,
         bias: f32,
