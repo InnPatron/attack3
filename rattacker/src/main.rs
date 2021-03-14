@@ -54,8 +54,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut buffer = [0u8; 1024];
     let mut zero = [0, 0];
     let mut s: Option<State> = None;
+    println!("Waiting to zero...");
     loop {
-        // TODO: make polling rate configurable
+
         if let Some(ref s) = s {
             manager.step(s.clone());
         }
@@ -75,6 +76,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     zero[0] = p.x_axis;
                     zero[1] = p.y_axis;
                     zeroed = true;
+                    println!("Zeroed!");
+                    continue;
                 }
                 s = Some(State::from_packet(zero, p));
                 // println!("{}", p);
