@@ -224,20 +224,29 @@ impl Manager {
                 })
             },
 
-            MouseMode::Linear { min, max, m } => Box::new(move |f| {
-                if f.abs() < config.deadzone {
-                    return;
-                }
-                let m = m as f32;
+            MouseMode::Linear { m, bias } => {
+                let mut dots_moved_acc = 0.0;
+                Box::new(move |f| {
+                    if f.abs() < config.deadzone {
+                        return;
+                    }
 
-                let r = f * m;
-                let r = (r as i32).clamp(min, max);
-                match axis {
-                    Axis::X => dispatcher.rel_mouse_x(r),
-                    Axis::Y => dispatcher.rel_mouse_y(r),
-                    Axis::Z => panic!("Cannot have mouse Z axis movement"),
-                }
-            }),
+                    let inches_moved = f;
+                    let dots_moved = inches_moved * config.dpi;
+                    dots_moved_acc += dots_moved;
+
+                    let bias = bias * m.signum();
+                    let dots_per_pixel = (1.0 - f.abs()) * m + bias;
+                    let pixels_moved =  (dots_moved_acc / dots_per_pixel) as i32;
+                    dots_moved_acc = dots_moved_acc % dots_per_pixel;
+
+                    match axis {
+                        Axis::X => dispatcher.rel_mouse_x(pixels_moved),
+                        Axis::Y => dispatcher.rel_mouse_y(pixels_moved),
+                        Axis::Z => panic!("Cannot have mouse Z axis movement"),
+                    }
+                })
+            },
         }
     }
 

@@ -56,9 +56,8 @@ pub struct AxisMouseConfig {
 pub enum MouseMode {
     Constant(f32),
     Linear {
-        min: i32,
-        max: i32,
         m: f32,
+        bias: f32,
     },
 }
 
