@@ -347,8 +347,11 @@ impl Manager {
 #[derive(Debug, Clone, PartialEq)]
 pub struct State {
     buttons: [bool; 11],
+    /// Normalized in range [-1.0, 1.0] [left, right]
     x_axis: f32,
+    /// Normalized in range [-1.0, 1.0] [back, forward]
     y_axis: f32,
+    /// Normalized in range [-1.0, 1.0] [down, up]
     z_axis: f32,
 }
 
