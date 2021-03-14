@@ -63,7 +63,7 @@ pub struct Manager {
     x_exit_deadzone_positive: Box<dyn Fn() -> ()>,
     y_exit_deadzone_positive: Box<dyn Fn() -> ()>,
 
-    axis_tracker: Box<dyn Fn(f32, f32, f32) -> ()>,
+    axis_tracker: Box<dyn FnMut(f32, f32, f32) -> ()>,
 
     x_deadzone: f32,
     y_deadzone: f32,
@@ -171,12 +171,12 @@ impl Manager {
                     y_exit_deadzone_positive: handler!(NOP),
 
                     axis_tracker: {
-                        let x_handler = Manager::mouse_mode_handler(
+                        let mut x_handler = Manager::mouse_mode_handler(
                             dispatcher.clone(),
                             Axis::X,
                             x_axis.clone(),
                         );
-                        let y_handler = Manager::mouse_mode_handler(
+                        let mut y_handler = Manager::mouse_mode_handler(
                             dispatcher.clone(),
                             Axis::Y,
                             y_axis.clone(),
@@ -198,19 +198,31 @@ impl Manager {
         dispatcher: Rc<T>,
         axis: Axis,
         config: AxisMouseConfig,
-    ) -> Box<dyn Fn(f32) -> ()> {
-        match config.mouse_mode {
-            MouseMode::Constant(c) => Box::new(move |f| {
-                if f.abs() < config.deadzone {
-                    return;
-                }
-                let r = (f.signum() as i32) * c;
-                match axis {
-                    Axis::X => dispatcher.rel_mouse_x(r),
-                    Axis::Y => dispatcher.rel_mouse_y(r),
-                    Axis::Z => panic!("Cannot have mouse Z axis movement"),
-                }
-            }),
+    ) -> Box<dyn FnMut(f32) -> ()> {
+        // NOTE: input per axis comes from a State
+        //   Thus, normalized [-1.0, 1.0]
+        //   Map directly to an 'inch'
+        match config.dots_per_pixel {
+            MouseMode::Constant(dots_per_pixel) => {
+                let mut dots_moved_acc = 0.0;
+                Box::new(move |f| {
+                    if f.abs() < config.deadzone {
+                        return;
+                    }
+
+                    let inches_moved = f;
+                    let dots_moved = inches_moved * config.dpi;
+                    dots_moved_acc += dots_moved;
+                    let pixels_moved = (dots_moved_acc / dots_per_pixel) as i32;
+                    dots_moved_acc = dots_moved_acc % dots_per_pixel;
+
+                    match axis {
+                        Axis::X => dispatcher.rel_mouse_x(pixels_moved),
+                        Axis::Y => dispatcher.rel_mouse_y(pixels_moved),
+                        Axis::Z => panic!("Cannot have mouse Z axis movement"),
+                    }
+                })
+            },
 
             MouseMode::Linear { min, max, m } => Box::new(move |f| {
                 if f.abs() < config.deadzone {

@@ -43,14 +43,18 @@ pub enum JoystickConfig {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+/// Implements mouse-style input
+/// Maps the normalized axis value ([-1.0, 1.0]) directly to inches moved
 pub struct AxisMouseConfig {
-    pub mouse_mode: MouseMode,
+    /// Defines the dots-per-pixel function
+    pub dots_per_pixel: MouseMode,
+    pub dpi: f32,
     pub deadzone: f32,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum MouseMode {
-    Constant(i32),
+    Constant(f32),
     Linear {
         min: i32,
         max: i32,
