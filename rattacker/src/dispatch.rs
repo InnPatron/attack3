@@ -214,6 +214,9 @@ impl Manager {
                     let inches_moved = f;
                     let dots_moved = inches_moved * config.dpi;
                     dots_moved_acc += dots_moved;
+
+                    // Apply dots-per-pixel-function:
+                    //   g(f) = c
                     let pixels_moved = (dots_moved_acc / dots_per_pixel) as i32;
                     dots_moved_acc = dots_moved_acc % dots_per_pixel;
 
@@ -236,8 +239,11 @@ impl Manager {
                     let dots_moved = inches_moved * config.dpi;
                     dots_moved_acc += dots_moved;
 
+                    // Apply dots-per-pixel-function:
+                    //   g(f) = (1 - |f|) * m + (bias * sign(m))
                     let bias = bias * m.signum();
                     let dots_per_pixel = (1.0 - f.abs()) * m + bias;
+
                     let pixels_moved =  (dots_moved_acc / dots_per_pixel) as i32;
                     dots_moved_acc = dots_moved_acc % dots_per_pixel;
 
