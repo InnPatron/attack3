@@ -5,7 +5,6 @@ extern crate bindings;
 use std::fs::File;
 use std::io::BufReader;
 use std::env;
-use std::{thread, time};
 use std::error::Error;
 
 use hidapi::{HidApi};
@@ -51,16 +50,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     attack3.set_blocking_mode(false)?;
     println!("Opened the Attack3");
 
-    println!("Attempting to read from the Attack3 with polling delay {}...",
-             cfg.polling_delay);
-
     let mut zeroed = false;
     let mut buffer = [0u8; 1024];
     let mut zero = [0, 0];
     let mut s: Option<State> = None;
     loop {
         // TODO: make polling rate configurable
-        thread::sleep(time::Duration::from_millis(cfg.polling_delay));
         if let Some(ref s) = s {
             manager.step(s.clone());
         }

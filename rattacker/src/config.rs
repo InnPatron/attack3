@@ -2,18 +2,15 @@ use serde::{Serialize, Deserialize};
 
 pub const BUTTON_LEN: usize = 11;
 
-pub fn default_polling_delay() -> u64 {
-    3
-}
-
 // TODO: z-axis
+// NOTE: polling delay should NOT be configurable
+// hidapi accumulates packets and returns  1 packet per read()
+//   Delaying a read() causes packets to accumulate, leading to laggy input
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     pub mode: Mode,
     pub buttons: [Key; BUTTON_LEN],
     pub joystick: JoystickConfig,
-    #[serde(default="default_polling_delay")]
-    pub polling_delay: u64,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
