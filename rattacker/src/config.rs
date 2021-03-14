@@ -62,9 +62,10 @@ pub enum MouseMode {
     },
 
     /// coef(f) = [1 / (c + (b * e)^(|f| + d))] * a + h
-    /// g(f) = coef(f) * target
+    /// g(f) = minimum(|clamp((1 - coef(f)), 0, 1) * target|, |min|) * sign(target)
     Logistic {
         target: f32,
+        min: f32,
         a: f32,
         b: f32,
         c: f32,

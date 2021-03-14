@@ -288,7 +288,7 @@ impl Manager {
                 })
             },
 
-            MouseMode::Logistic { target, a, b, c, d, h } => {
+            MouseMode::Logistic { target, min, a, b, c, d, h } => {
                 let mut dots_moved_acc = 0.0;
                 Box::new(move |f| {
                     if f.abs() < config.deadzone {
@@ -301,16 +301,26 @@ impl Manager {
 
                     // Apply dots-per-pixel-function g:
                     //   coef(f) = [1 / (c + (b * e)^(|f| + d))] * a + h
-                    //   g(f) = coef(f) * target
+                    //   g(f) = minimum(|clamp((1 - coef(f)), 0, 1) * target|, |min|) * sign(target)
                     let coef = {
                         let exponent = f.abs() + d;
-                        let denom = c + b.powf(exponent) + exponent.exp();
+                        let denom = c + b.powf(-exponent) * (-exponent).exp();
                         1.0 / denom * a + h
                     };
-                    let dots_per_pixel = coef * target;
+                    let coef = coef.clamp(0.0, 1.0);
+                    let mut dots_per_pixel = (1.0 - coef) * target;
 
-                    let pixels_moved =  (dots_moved_acc / dots_per_pixel) as i32;
-                    dots_moved_acc = dots_moved_acc % dots_per_pixel;
+                    if dots_per_pixel.abs() < min {
+                        dots_per_pixel = min * dots_per_pixel.signum();
+                    }
+
+                    let pixels_moved = if dots_per_pixel != 0.0 {
+                        let pixels_moved = (dots_moved_acc / dots_per_pixel) as i32;
+                        dots_moved_acc = dots_moved_acc % dots_per_pixel;
+                        pixels_moved
+                    } else {
+                        0
+                    };
 
                     match axis {
                         Axis::X => dispatcher.rel_mouse_x(pixels_moved),
