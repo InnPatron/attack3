@@ -1,6 +1,6 @@
 # rattacker
 
-User-space program that translates HID input from a Logitech Attack3 into keyboard and mouse input using libhidapi.
+User-space program that translates HID input from a Logitech Attack3 using libhidapi into keyboard and mouse input.
 
 Currently Windows only.
 
